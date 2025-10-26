@@ -1,17 +1,13 @@
-# TT-Live-AI A3-TK 口播生成系统
-
+# TT-Live-AI A3-TK
 ## 🚀 快速启动
-
 ### 1. 安装依赖
 ```bash
 pip install -r requirements.txt
 ```
-
 ### 2. 启动服务
 ```bash
 python run_tts.py
 ```
-
 ### 3. 测试接口
 ```bash
 curl -X POST http://localhost:5000/generate \
