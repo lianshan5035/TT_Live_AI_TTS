@@ -1,0 +1,874 @@
+/* TT-Live-AI A3标准样式 - 完全符合GPTs-A3文档规范 */
+
+:root {
+    /* A3标准色彩系统 */
+    --a3-primary: #6366f1;
+    --a3-primary-dark: #4f46e5;
+    --a3-secondary: #8b5cf6;
+    --a3-accent: #06b6d4;
+    --a3-success: #10b981;
+    --a3-warning: #f59e0b;
+    --a3-error: #ef4444;
+    --a3-info: #3b82f6;
+    
+    /* A3标准背景色 */
+    --a3-bg-primary: #ffffff;
+    --a3-bg-secondary: #f8fafc;
+    --a3-bg-tertiary: #f1f5f9;
+    --a3-bg-dark: #1e293b;
+    
+    /* A3标准文字色 */
+    --a3-text-primary: #1e293b;
+    --a3-text-secondary: #64748b;
+    --a3-text-tertiary: #94a3b8;
+    --a3-text-inverse: #ffffff;
+    
+    /* A3标准边框 */
+    --a3-border: #e2e8f0;
+    --a3-border-light: #f1f5f9;
+    --a3-border-dark: #cbd5e1;
+    
+    /* A3标准阴影 */
+    --a3-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --a3-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --a3-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --a3-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    
+    /* A3标准间距 */
+    --a3-spacing-xs: 0.25rem;
+    --a3-spacing-sm: 0.5rem;
+    --a3-spacing-md: 1rem;
+    --a3-spacing-lg: 1.5rem;
+    --a3-spacing-xl: 2rem;
+    --a3-spacing-2xl: 3rem;
+    
+    /* A3标准字体 */
+    --a3-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --a3-font-size-xs: 0.75rem;
+    --a3-font-size-sm: 0.875rem;
+    --a3-font-size-base: 1rem;
+    --a3-font-size-lg: 1.125rem;
+    --a3-font-size-xl: 1.25rem;
+    --a3-font-size-2xl: 1.5rem;
+    --a3-font-size-3xl: 1.875rem;
+    
+    /* A3标准圆角 */
+    --a3-radius-sm: 0.25rem;
+    --a3-radius-md: 0.375rem;
+    --a3-radius-lg: 0.5rem;
+    --a3-radius-xl: 0.75rem;
+    --a3-radius-2xl: 1rem;
+}
+
+/* A3标准基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--a3-font-family);
+    background-color: var(--a3-bg-secondary);
+    color: var(--a3-text-primary);
+    line-height: 1.6;
+}
+
+.a3-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* A3标准头部 */
+.a3-header {
+    background: linear-gradient(135deg, var(--a3-primary), var(--a3-secondary));
+    color: var(--a3-text-inverse);
+    padding: var(--a3-spacing-lg) 0;
+    box-shadow: var(--a3-shadow-lg);
+}
+
+.a3-header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--a3-spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.a3-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--a3-spacing-md);
+}
+
+.a3-logo i {
+    font-size: var(--a3-font-size-2xl);
+}
+
+.a3-logo h1 {
+    font-size: var(--a3-font-size-2xl);
+    font-weight: 700;
+}
+
+.a3-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: var(--a3-spacing-xs) var(--a3-spacing-sm);
+    border-radius: var(--a3-radius-md);
+    font-size: var(--a3-font-size-xs);
+    font-weight: 500;
+}
+
+.a3-status {
+    display: flex;
+    gap: var(--a3-spacing-lg);
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: var(--a3-spacing-sm);
+    background: rgba(255, 255, 255, 0.1);
+    padding: var(--a3-spacing-sm) var(--a3-spacing-md);
+    border-radius: var(--a3-radius-md);
+    font-size: var(--a3-font-size-sm);
+}
+
+.status-item i {
+    color: var(--a3-success);
+}
+
+/* A3标准主内容 */
+.a3-main {
+    flex: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--a3-spacing-xl) var(--a3-spacing-lg);
+    width: 100%;
+}
+
+/* A3标准仪表板 */
+.a3-dashboard {
+    margin-bottom: var(--a3-spacing-2xl);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--a3-spacing-lg);
+}
+
+.dashboard-card {
+    background: var(--a3-bg-primary);
+    border-radius: var(--a3-radius-xl);
+    box-shadow: var(--a3-shadow-md);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+    box-shadow: var(--a3-shadow-lg);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--a3-bg-tertiary), var(--a3-bg-secondary));
+    padding: var(--a3-spacing-lg);
+    border-bottom: 1px solid var(--a3-border);
+}
+
+.card-header h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--a3-spacing-sm);
+    font-size: var(--a3-font-size-lg);
+    font-weight: 600;
+    color: var(--a3-text-primary);
+}
+
+.card-header i {
+    color: var(--a3-primary);
+}
+
+.card-content {
+    padding: var(--a3-spacing-lg);
+}
+
+/* A3标准概览 */
+.a3-overview .overview-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--a3-spacing-lg);
+}
+
+.stat-item {
+    text-align: center;
+    padding: var(--a3-spacing-md);
+    background: var(--a3-bg-tertiary);
+    border-radius: var(--a3-radius-lg);
+}
+
+.stat-value {
+    font-size: var(--a3-font-size-2xl);
+    font-weight: 700;
+    color: var(--a3-primary);
+    margin-bottom: var(--a3-spacing-xs);
+}
+
+.stat-label {
+    font-size: var(--a3-font-size-sm);
+    color: var(--a3-text-secondary);
+    font-weight: 500;
+}
+
+/* A3标准批次控制 */
+.batch-controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--a3-spacing-md);
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--a3-spacing-xs);
+}
+
+.control-group label {
+    font-size: var(--a3-font-size-sm);
+    font-weight: 500;
+    color: var(--a3-text-secondary);
+}
+
+.control-group input,
+.control-group select {
+    padding: var(--a3-spacing-sm) var(--a3-spacing-md);
+    border: 1px solid var(--a3-border);
+    border-radius: var(--a3-radius-md);
+    font-size: var(--a3-font-size-sm);
+    transition: all 0.3s ease;
+}
+
+.control-group input:focus,
+.control-group select:focus {
+    outline: none;
+    border-color: var(--a3-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* A3标准按钮 */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--a3-spacing-sm);
+    padding: var(--a3-spacing-sm) var(--a3-spacing-lg);
+    border: none;
+    border-radius: var(--a3-radius-md);
+    font-size: var(--a3-font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--a3-primary);
+    color: var(--a3-text-inverse);
+}
+
+.btn-primary:hover {
+    background: var(--a3-primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--a3-bg-tertiary);
+    color: var(--a3-text-primary);
+    border: 1px solid var(--a3-border);
+}
+
+.btn-secondary:hover {
+    background: var(--a3-border-light);
+}
+
+.btn-success {
+    background: var(--a3-success);
+    color: var(--a3-text-inverse);
+}
+
+.btn-success:hover {
+    background: #059669;
+}
+
+/* A3标准情绪分布 */
+.emotion-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--a3-spacing-sm);
+}
+
+.emotion-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--a3-spacing-md);
+    background: var(--a3-bg-tertiary);
+    border-radius: var(--a3-radius-lg);
+    transition: all 0.3s ease;
+}
+
+.emotion-item:hover {
+    background: var(--a3-primary);
+    color: var(--a3-text-inverse);
+    transform: translateY(-2px);
+}
+
+.emotion-icon {
+    font-size: var(--a3-font-size-lg);
+    margin-bottom: var(--a3-spacing-xs);
+}
+
+.emotion-name {
+    font-size: var(--a3-font-size-xs);
+    font-weight: 500;
+    text-align: center;
+}
+
+.emotion-count {
+    font-size: var(--a3-font-size-sm);
+    font-weight: 600;
+    margin-top: var(--a3-spacing-xs);
+}
+
+/* A3标准文件管理 */
+.file-upload-area {
+    border: 2px dashed var(--a3-border);
+    border-radius: var(--a3-radius-lg);
+    padding: var(--a3-spacing-2xl);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: var(--a3-spacing-lg);
+}
+
+.file-upload-area:hover {
+    border-color: var(--a3-primary);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.file-upload-area.dragover {
+    border-color: var(--a3-primary);
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.upload-icon {
+    font-size: var(--a3-font-size-3xl);
+    color: var(--a3-primary);
+    margin-bottom: var(--a3-spacing-md);
+}
+
+.upload-text p {
+    margin-bottom: var(--a3-spacing-xs);
+    color: var(--a3-text-secondary);
+}
+
+.upload-hint {
+    font-size: var(--a3-font-size-xs);
+    color: var(--a3-text-tertiary);
+}
+
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--a3-spacing-sm);
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--a3-spacing-md);
+    background: var(--a3-bg-tertiary);
+    border-radius: var(--a3-radius-md);
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: var(--a3-spacing-sm);
+}
+
+.file-icon {
+    color: var(--a3-success);
+}
+
+.file-name {
+    font-weight: 500;
+}
+
+.file-size {
+    font-size: var(--a3-font-size-xs);
+    color: var(--a3-text-tertiary);
+}
+
+/* A3标准进度条 */
+.a3-progress {
+    margin-bottom: var(--a3-spacing-2xl);
+}
+
+.progress-card {
+    background: var(--a3-bg-primary);
+    border-radius: var(--a3-radius-xl);
+    box-shadow: var(--a3-shadow-md);
+    overflow: hidden;
+}
+
+.progress-header {
+    background: linear-gradient(135deg, var(--a3-primary), var(--a3-secondary));
+    color: var(--a3-text-inverse);
+    padding: var(--a3-spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progress-header h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--a3-spacing-sm);
+}
+
+.progress-content {
+    padding: var(--a3-spacing-lg);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--a3-bg-tertiary);
+    border-radius: var(--a3-radius-sm);
+    overflow: hidden;
+    margin-bottom: var(--a3-spacing-md);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--a3-primary), var(--a3-secondary));
+    border-radius: var(--a3-radius-sm);
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progress-text {
+    font-weight: 500;
+}
+
+.progress-stats {
+    font-size: var(--a3-font-size-sm);
+    color: var(--a3-text-secondary);
+}
+
+/* A3标准结果展示 */
+.a3-results {
+    margin-bottom: var(--a3-spacing-2xl);
+}
+
+.results-card {
+    background: var(--a3-bg-primary);
+    border-radius: var(--a3-radius-xl);
+    box-shadow: var(--a3-shadow-md);
+    overflow: hidden;
+}
+
+.results-header {
+    background: linear-gradient(135deg, var(--a3-success), var(--a3-accent));
+    color: var(--a3-text-inverse);
+    padding: var(--a3-spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.results-header h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--a3-spacing-sm);
+}
+
+.results-actions {
+    display: flex;
+    gap: var(--a3-spacing-sm);
+}
+
+.results-content {
+    padding: var(--a3-spacing-lg);
+}
+
+.results-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--a3-spacing-md);
+    margin-bottom: var(--a3-spacing-lg);
+}
+
+.summary-item {
+    text-align: center;
+    padding: var(--a3-spacing-md);
+    background: var(--a3-bg-tertiary);
+    border-radius: var(--a3-radius-lg);
+}
+
+.summary-value {
+    font-size: var(--a3-font-size-xl);
+    font-weight: 700;
+    color: var(--a3-success);
+    margin-bottom: var(--a3-spacing-xs);
+}
+
+.summary-label {
+    font-size: var(--a3-font-size-sm);
+    color: var(--a3-text-secondary);
+}
+
+.results-files {
+    display: flex;
+    flex-direction: column;
+    gap: var(--a3-spacing-sm);
+}
+
+.result-file {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--a3-spacing-md);
+    background: var(--a3-bg-tertiary);
+    border-radius: var(--a3-radius-md);
+}
+
+.file-details {
+    display: flex;
+    align-items: center;
+    gap: var(--a3-spacing-sm);
+}
+
+.file-type {
+    padding: var(--a3-spacing-xs) var(--a3-spacing-sm);
+    background: var(--a3-primary);
+    color: var(--a3-text-inverse);
+    border-radius: var(--a3-radius-sm);
+    font-size: var(--a3-font-size-xs);
+    font-weight: 500;
+}
+
+/* A3标准日志 */
+.a3-logs {
+    margin-bottom: var(--a3-spacing-2xl);
+}
+
+.logs-card {
+    background: var(--a3-bg-primary);
+    border-radius: var(--a3-radius-xl);
+    box-shadow: var(--a3-shadow-md);
+    overflow: hidden;
+}
+
+.logs-header {
+    background: var(--a3-bg-dark);
+    color: var(--a3-text-inverse);
+    padding: var(--a3-spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logs-header h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--a3-spacing-sm);
+}
+
+.logs-content {
+    padding: var(--a3-spacing-lg);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.logs-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--a3-spacing-sm);
+}
+
+.log-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--a3-spacing-sm);
+    padding: var(--a3-spacing-sm);
+    background: var(--a3-bg-tertiary);
+    border-radius: var(--a3-radius-md);
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: var(--a3-font-size-xs);
+}
+
+.log-time {
+    color: var(--a3-text-tertiary);
+    white-space: nowrap;
+}
+
+.log-level {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.log-level.info {
+    color: var(--a3-info);
+}
+
+.log-level.success {
+    color: var(--a3-success);
+}
+
+.log-level.warning {
+    color: var(--a3-warning);
+}
+
+.log-level.error {
+    color: var(--a3-error);
+}
+
+.log-message {
+    flex: 1;
+    color: var(--a3-text-primary);
+}
+
+/* A3标准模态框 */
+.a3-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--a3-bg-primary);
+    border-radius: var(--a3-radius-xl);
+    box-shadow: var(--a3-shadow-xl);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--a3-primary), var(--a3-secondary));
+    color: var(--a3-text-inverse);
+    padding: var(--a3-spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    font-size: var(--a3-font-size-lg);
+    font-weight: 600;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--a3-text-inverse);
+    font-size: var(--a3-font-size-lg);
+    cursor: pointer;
+    padding: var(--a3-spacing-xs);
+    border-radius: var(--a3-radius-sm);
+    transition: background 0.3s ease;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-body {
+    padding: var(--a3-spacing-lg);
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: var(--a3-spacing-lg);
+    border-top: 1px solid var(--a3-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--a3-spacing-sm);
+}
+
+/* A3标准通知 */
+.a3-toast {
+    position: fixed;
+    top: var(--a3-spacing-lg);
+    right: var(--a3-spacing-lg);
+    z-index: 1001;
+    max-width: 400px;
+}
+
+.toast-content {
+    background: var(--a3-bg-primary);
+    border-radius: var(--a3-radius-lg);
+    box-shadow: var(--a3-shadow-lg);
+    padding: var(--a3-spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--a3-spacing-sm);
+    animation: slideInRight 0.3s ease;
+}
+
+.toast-icon {
+    font-size: var(--a3-font-size-lg);
+}
+
+.toast-icon.success {
+    color: var(--a3-success);
+}
+
+.toast-icon.error {
+    color: var(--a3-error);
+}
+
+.toast-icon.warning {
+    color: var(--a3-warning);
+}
+
+.toast-icon.info {
+    color: var(--a3-info);
+}
+
+.toast-message {
+    flex: 1;
+    font-weight: 500;
+}
+
+/* A3标准动画 */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* A3标准响应式设计 */
+@media (max-width: 768px) {
+    .a3-header-content {
+        flex-direction: column;
+        gap: var(--a3-spacing-md);
+    }
+    
+    .a3-status {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .overview-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .emotion-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .results-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: var(--a3-spacing-md);
+    }
+    
+    .a3-toast {
+        left: var(--a3-spacing-md);
+        right: var(--a3-spacing-md);
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .a3-main {
+        padding: var(--a3-spacing-md);
+    }
+    
+    .overview-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .emotion-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .results-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .results-actions {
+        flex-direction: column;
+    }
+}
+
+/* A3标准打印样式 */
+@media print {
+    .a3-header,
+    .a3-progress,
+    .a3-logs,
+    .btn,
+    .modal-close {
+        display: none !important;
+    }
+    
+    .a3-main {
+        padding: 0 !important;
+    }
+    
+    .dashboard-card,
+    .results-card {
+        box-shadow: none !important;
+        border: 1px solid var(--a3-border) !important;
+    }
+}

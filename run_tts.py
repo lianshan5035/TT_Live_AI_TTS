@@ -103,7 +103,7 @@ async def generate_single_audio(text, voice, emotion, output_path):
             "file_path": output_path
         }
 
-async def process_scripts_batch(scripts, product_name, discount):
+async def process_scripts_batch(scripts, product_name, discount, emotion="Friendly", voice=DEFAULT_VOICE):
     """批量处理脚本"""
     # 创建产品输出目录
     product_dir = f"outputs/{product_name}"
@@ -119,9 +119,13 @@ async def process_scripts_batch(scripts, product_name, discount):
     
     async def process_single_script(script, index):
         async with semaphore:
-            text = script["english_script"]
-            emotion = script.get("emotion", "Friendly")
-            voice = script.get("voice", DEFAULT_VOICE)
+            # 如果script是字符串，直接使用；如果是字典，提取text
+            if isinstance(script, str):
+                text = script
+            else:
+                text = script.get("english_script", str(script))
+                emotion = script.get("emotion", emotion)
+                voice = script.get("voice", voice)
             
             # 生成音频文件名
             audio_filename = f"tts_{index+1:04d}_{emotion}.mp3"
@@ -169,15 +173,22 @@ def generate_excel_output(scripts, product_name, discount, results):
     for i, (script, result) in enumerate(zip(scripts, results)):
         if isinstance(result, dict) and result.get("success"):
             # 成功生成音频
-            audio_filename = f"tts_{i+1:04d}_{script.get('emotion', 'Friendly')}.mp3"
+            emotion = "Friendly"  # 默认情绪
+            if isinstance(script, str):
+                english_script = script
+            else:
+                english_script = script.get("english_script", str(script))
+                emotion = script.get("emotion", "Friendly")
+            
+            audio_filename = f"tts_{i+1:04d}_{emotion}.mp3"
             audio_path = f"outputs/{product_name}/{audio_filename}"
             
             excel_data.append({
                 "id": i + 1,
-                "english_script": script["english_script"],
-                "chinese_translation": script.get("chinese_translation", ""),
-                "emotion": script.get("emotion", "Friendly"),
-                "voice": script.get("voice", DEFAULT_VOICE),
+                "english_script": english_script,
+                "chinese_translation": script.get("chinese_translation", "") if isinstance(script, dict) else "",
+                "emotion": emotion,
+                "voice": script.get("voice", DEFAULT_VOICE) if isinstance(script, dict) else DEFAULT_VOICE,
                 "rate": result.get("params", {}).get("rate", "+2%"),
                 "pitch": result.get("params", {}).get("pitch", "+2%"),
                 "volume": result.get("params", {}).get("volume", "0dB"),
@@ -185,12 +196,17 @@ def generate_excel_output(scripts, product_name, discount, results):
             })
         else:
             # 生成失败
+            if isinstance(script, str):
+                english_script = script
+            else:
+                english_script = script.get("english_script", str(script))
+            
             excel_data.append({
                 "id": i + 1,
-                "english_script": script["english_script"],
-                "chinese_translation": script.get("chinese_translation", ""),
-                "emotion": script.get("emotion", "Friendly"),
-                "voice": script.get("voice", DEFAULT_VOICE),
+                "english_script": english_script,
+                "chinese_translation": script.get("chinese_translation", "") if isinstance(script, dict) else "",
+                "emotion": script.get("emotion", "Friendly") if isinstance(script, dict) else "Friendly",
+                "voice": script.get("voice", DEFAULT_VOICE) if isinstance(script, dict) else DEFAULT_VOICE,
                 "rate": "ERROR",
                 "pitch": "ERROR",
                 "volume": "ERROR",
@@ -228,7 +244,9 @@ def generate_voice_content():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            result = loop.run_until_complete(process_scripts_batch(scripts, product_name, discount))
+            emotion = data.get('emotion', 'Friendly')
+            voice = data.get('voice', DEFAULT_VOICE)
+            result = loop.run_until_complete(process_scripts_batch(scripts, product_name, discount, emotion, voice))
         finally:
             loop.close()
         
@@ -237,8 +255,8 @@ def generate_voice_content():
         
         # 生成样本音频列表
         sample_audios = []
+        emotion = data.get('emotion', 'Friendly')  # 从请求中获取情绪
         for i, script in enumerate(scripts[:3]):  # 取前3个作为样本
-            emotion = script.get("emotion", "Friendly")
             audio_filename = f"tts_{i+1:04d}_{emotion}.mp3"
             sample_audios.append(f"outputs/{product_name}/{audio_filename}")
         
@@ -295,4 +313,4 @@ if __name__ == '__main__':
     logger.info("❤️ 健康检查: GET /health")
     logger.info("📊 系统状态: GET /status")
     
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)

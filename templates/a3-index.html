@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TT-Live-AI A3标准控制中心</title>
+    <link rel="stylesheet" href="/static/css/a3-style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="a3-container">
+        <!-- A3标准顶部导航 -->
+        <header class="a3-header">
+            <div class="a3-header-content">
+                <div class="a3-logo">
+                    <i class="fas fa-microphone-alt"></i>
+                    <h1>TT-Live-AI A3标准</h1>
+                    <span class="a3-badge">GPTs-A3文档规范</span>
+                </div>
+                <div class="a3-status">
+                    <div class="status-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>A3合规</span>
+                    </div>
+                    <div class="status-item">
+                        <i class="fas fa-brain"></i>
+                        <span>12种情绪</span>
+                    </div>
+                    <div class="status-item">
+                        <i class="fas fa-volume-up"></i>
+                        <span>动态参数</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- A3标准主内容区 -->
+        <main class="a3-main">
+            <!-- A3标准仪表板 -->
+            <section class="a3-dashboard">
+                <div class="dashboard-grid">
+                    <!-- A3标准概览 -->
+                    <div class="dashboard-card a3-overview">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-line"></i> A3标准概览</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="overview-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value" id="total-emotions">12</div>
+                                    <div class="stat-label">情绪类型</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="total-voices">12</div>
+                                    <div class="stat-label">语音模型</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="total-scripts">800</div>
+                                    <div class="stat-label">目标脚本</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="compliance-score">100%</div>
+                                    <div class="stat-label">合规评分</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- A3标准批次控制 -->
+                    <div class="dashboard-card a3-batch-control">
+                        <div class="card-header">
+                            <h3><i class="fas fa-cogs"></i> A3批次控制</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="batch-controls">
+                                <div class="control-group">
+                                    <label>产品名称</label>
+                                    <input type="text" id="product-name" placeholder="输入产品名称" value="Dark Spot Patch">
+                                </div>
+                                <div class="control-group">
+                                    <label>批次数量</label>
+                                    <select id="batch-count">
+                                        <option value="1">1批次 (80条)</option>
+                                        <option value="5">5批次 (400条)</option>
+                                        <option value="10" selected>10批次 (800条)</option>
+                                    </select>
+                                </div>
+                                <div class="control-group">
+                                    <label>每批数量</label>
+                                    <select id="batch-size">
+                                        <option value="80" selected>80条/批</option>
+                                        <option value="100">100条/批</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="generateA3Batch()">
+                                    <i class="fas fa-play"></i> 生成A3标准批次
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- A3标准情绪分布 -->
+                    <div class="dashboard-card a3-emotion-distribution">
+                        <div class="card-header">
+                            <h3><i class="fas fa-heart"></i> A3情绪分布</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="emotion-grid" id="emotion-grid">
+                                <!-- 动态生成情绪分布 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- A3标准文件管理 -->
+                    <div class="dashboard-card a3-file-management">
+                        <div class="card-header">
+                            <h3><i class="fas fa-file-excel"></i> A3文件管理</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="file-upload-area" id="file-upload-area">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="upload-text">
+                                    <p>拖拽Excel文件到此处或点击上传</p>
+                                    <p class="upload-hint">支持A3标准格式：产品名称、文案内容、情感、语音模型等</p>
+                                </div>
+                                <input type="file" id="file-input" accept=".xlsx" style="display: none;">
+                            </div>
+                            <div class="file-list" id="file-list">
+                                <!-- 动态生成文件列表 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- A3标准生成进度 -->
+            <section class="a3-progress" id="a3-progress" style="display: none;">
+                <div class="progress-card">
+                    <div class="progress-header">
+                        <h3><i class="fas fa-spinner fa-spin"></i> A3标准生成中...</h3>
+                        <button class="btn btn-secondary" onclick="cancelGeneration()">取消</button>
+                    </div>
+                    <div class="progress-content">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <div class="progress-info">
+                            <div class="progress-text" id="progress-text">准备中...</div>
+                            <div class="progress-stats" id="progress-stats">0/800 脚本</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- A3标准结果展示 -->
+            <section class="a3-results" id="a3-results" style="display: none;">
+                <div class="results-card">
+                    <div class="results-header">
+                        <h3><i class="fas fa-check-circle"></i> A3标准生成完成</h3>
+                        <div class="results-actions">
+                            <button class="btn btn-success" onclick="downloadResults()">
+                                <i class="fas fa-download"></i> 下载结果
+                            </button>
+                            <button class="btn btn-primary" onclick="viewDetails()">
+                                <i class="fas fa-eye"></i> 查看详情
+                            </button>
+                        </div>
+                    </div>
+                    <div class="results-content">
+                        <div class="results-summary" id="results-summary">
+                            <!-- 动态生成结果摘要 -->
+                        </div>
+                        <div class="results-files" id="results-files">
+                            <!-- 动态生成文件列表 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- A3标准日志 -->
+            <section class="a3-logs">
+                <div class="logs-card">
+                    <div class="logs-header">
+                        <h3><i class="fas fa-terminal"></i> A3标准日志</h3>
+                        <button class="btn btn-secondary" onclick="refreshLogs()">
+                            <i class="fas fa-sync"></i> 刷新
+                        </button>
+                    </div>
+                    <div class="logs-content">
+                        <div class="logs-list" id="logs-list">
+                            <!-- 动态生成日志 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- A3标准模态框 -->
+        <div class="a3-modal" id="a3-modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">A3标准信息</h3>
+                    <button class="modal-close" onclick="closeModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" id="modal-body">
+                    <!-- 动态内容 -->
+                </div>
+                <div class="modal-footer" id="modal-footer">
+                    <!-- 动态按钮 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- A3标准通知 -->
+        <div class="a3-toast" id="a3-toast" style="display: none;">
+            <div class="toast-content">
+                <i class="toast-icon" id="toast-icon"></i>
+                <span class="toast-message" id="toast-message"></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/a3-app.js"></script>
+</body>
+</html>
