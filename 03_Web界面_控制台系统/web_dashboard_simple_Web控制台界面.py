@@ -145,10 +145,85 @@ def get_voices_for_emotion(emotion):
         logger.error(f"获取情绪语音模型失败: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route('/api/voice-preview', methods=['POST'])
+def voice_preview():
+    """语音预览功能"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        voice = data.get('voice', 'en-US-JennyNeural')
+        emotion = data.get('emotion', 'Friendly')
+        
+        if not text:
+            return jsonify({"success": False, "error": "文本内容不能为空"}), 400
+        
+        # 发送到TTS服务生成预览
+        tts_response = requests.post(
+            f"{TTS_SERVICE_URL}/generate",
+            json={
+                "scripts": [text],
+                "product_name": "preview",
+                "discount": 0,
+                "emotion": emotion,
+                "voice": voice
+            },
+            timeout=30
+        )
+        
+        if tts_response.status_code == 200:
+            tts_data = tts_response.json()
+            if tts_data.get("success"):
+                return jsonify({
+                    "success": True,
+                    "audio_file": tts_data.get("audio_files", [{}])[0],
+                    "message": "语音预览生成成功"
+                })
+            else:
+                return jsonify({"success": False, "error": tts_data.get("error", "TTS生成失败")}), 500
+        else:
+            return jsonify({"success": False, "error": f"TTS服务错误: {tts_response.status_code}"}), 500
+            
+    except Exception as e:
+        logger.error(f"语音预览失败: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/voice-recommendations', methods=['POST'])
+def get_voice_recommendations():
+    """根据情绪获取推荐语音"""
+    try:
+        data = request.get_json()
+        emotion = data.get('emotion', 'Friendly')
+        
+        if emotion in EMOTION_VOICE_MAPPING:
+            voices = EMOTION_VOICE_MAPPING[emotion]
+            voice_details = []
+            for voice in voices:
+                voice_info = VOICE_MODELS.get(voice, {"gender": "未知", "style": "未知", "name": "未知", "description": "未知"})
+                voice_details.append({
+                    "voice": voice,
+                    "info": voice_info
+                })
+            
+            return jsonify({
+                "success": True,
+                "emotion": emotion,
+                "recommended_voices": voice_details,
+                "total_recommended": len(voices)
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": f"不支持的情绪类型: {emotion}",
+                "supported_emotions": list(EMOTION_VOICE_MAPPING.keys())
+            }), 400
+            
+    except Exception as e:
+        logger.error(f"获取语音推荐失败: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @app.route('/api/status')
 def get_status():
     try:
-        # 检查TTS服务状态
         tts_status = "unknown"
         tts_info = {}
         try:

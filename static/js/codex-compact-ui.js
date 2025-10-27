@@ -58,6 +58,11 @@ class CompactVoiceGenerator {
             btn.addEventListener('click', (e) => this.selectPreset(e.target.dataset.emotion));
         });
 
+        // 语音模型选择
+        document.querySelectorAll('.voice-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.selectVoice(e.target.dataset.voice, e.target.dataset.name));
+        });
+
         // 滑块控制
         document.getElementById('pitchSlider').addEventListener('input', (e) => {
             this.currentSettings.pitch = parseInt(e.target.value);
@@ -368,6 +373,24 @@ class CompactVoiceGenerator {
         this.saveSettings();
         
         this.showToast(`已选择情绪: ${emotion}`, 'info');
+    }
+
+    selectVoice(voice, name) {
+        // 移除所有语音按钮的active状态
+        document.querySelectorAll('.voice-btn').forEach(btn => btn.classList.remove('active'));
+        
+        // 添加当前按钮的active状态
+        document.querySelector(`[data-voice="${voice}"]`).classList.add('active');
+        
+        // 更新当前设置
+        this.currentSettings.voice = voice;
+        this.currentSettings.voiceName = name;
+        
+        this.saveSettings();
+        this.addLogEntry('info', '语音选择', `已选择 ${name} 语音模型`);
+        
+        // 显示语音预览提示
+        this.showToast(`已选择 ${name} 语音模型`, 'success');
     }
 
     async testVoice() {
