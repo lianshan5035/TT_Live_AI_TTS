@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TT-Live-AI 语音生成系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/codex-compact-ui.css') }}">
+</head>
+<body>
+    <div class="page">
+        <header class="topbar">
+            <div class="brand">
+                <i class="fa-solid fa-microphone"></i>
+                <span>TT-Live-AI</span>
+            </div>
+            <div class="status-pill ok" id="systemStatus">
+                <i class="fa-solid fa-circle"></i>
+                <span>系统正常</span>
+            </div>
+            <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </header>
+
+        <main class="grid">
+            <!-- Excel上传和进度 -->
+            <section class="card upload">
+                <h2><i class="fa-solid fa-cloud-arrow-up"></i> Excel文件上传</h2>
+                <div class="dropzone" id="dropzone">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <p>拖拽Excel文件到此处或点击选择</p>
+                    <button class="btn btn-primary" id="fileUploadBtn">选择文件</button>
+                    <p class="upload-tips">支持 .xlsx, .xls, .csv, .tsv, .txt 格式</p>
+                </div>
+                <div class="file-list" id="fileList" style="display: none;">
+                    <!-- 文件列表将动态插入 -->
+                </div>
+                <div class="overall-progress" id="overallProgress" style="display: none;">
+                    <div class="progress-header">
+                        <span>整体进度</span>
+                        <span class="progress-percent">0%</span>
+                    </div>
+                    <progress value="0" max="100" id="progressBar"></progress>
+                    <div class="progress-details" id="progressDetails">
+                        <span class="success-count">成功: 0 个文件</span>
+                        <span class="failed-count">失败: 0 个文件</span>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.tsv,.txt" style="display: none;">
+            </section>
+
+            <!-- 语音参数控制 -->
+            <section class="card controls">
+                <h2><i class="fa-solid fa-sliders-h"></i> 语音参数</h2>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="presets">预设</button>
+                    <button class="tab-btn" data-tab="advanced">高级</button>
+                </div>
+                
+                <div class="tab-content" id="presetsTab">
+                    <div class="preset-grid">
+                        <button class="preset-btn" data-emotion="Friendly">友好</button>
+                        <button class="preset-btn" data-emotion="Calm">平静</button>
+                        <button class="preset-btn" data-emotion="Confident">自信</button>
+                        <button class="preset-btn" data-emotion="Excited">兴奋</button>
+                        <button class="preset-btn" data-emotion="Playful">活泼</button>
+                        <button class="preset-btn" data-emotion="Urgent">紧急</button>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="advancedTab" style="display: none;">
+                    <div class="slider-group">
+                        <label>音调 <span id="pitchValue">+0Hz</span></label>
+                        <input type="range" id="pitchSlider" min="-50" max="50" value="0" class="slider">
+                    </div>
+                    <div class="slider-group">
+                        <label>语速 <span id="rateValue">+0%</span></label>
+                        <input type="range" id="rateSlider" min="-50" max="50" value="0" class="slider">
+                    </div>
+                    <div class="slider-group">
+                        <label>音量 <span id="volumeValue">+0%</span></label>
+                        <input type="range" id="volumeSlider" min="-50" max="50" value="0" class="slider">
+                    </div>
+                </div>
+
+                <div class="select-group">
+                    <label>音色模型</label>
+                    <select id="voiceSelect" class="form-control">
+                        <option value="en-US-JennyNeural">Jenny (美式女声)</option>
+                        <option value="en-US-GuyNeural">Guy (美式男声)</option>
+                        <option value="en-US-AriaNeural">Aria (美式女声)</option>
+                        <option value="en-US-DavisNeural">Davis (美式男声)</option>
+                        <option value="zh-CN-XiaoxiaoNeural">晓晓 (中文女声)</option>
+                        <option value="zh-CN-YunyangNeural">云扬 (中文男声)</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- 快速操作 -->
+            <section class="card quick-actions">
+                <h2><i class="fa-solid fa-bolt"></i> 快速操作</h2>
+                <div class="actions">
+                    <button class="btn btn-primary" id="testVoiceBtn">
+                        <i class="fa-solid fa-play"></i> 试听语音
+                    </button>
+                    <button class="btn btn-success" id="generateBtn" disabled>
+                        <i class="fa-solid fa-magic"></i> 开始生成
+                    </button>
+                    <button class="btn btn-warning" id="pauseBtn" disabled>
+                        <i class="fa-solid fa-pause"></i> 暂停
+                    </button>
+                    <button class="btn btn-info" id="retryBtn" disabled>
+                        <i class="fa-solid fa-redo"></i> 重试失败
+                    </button>
+                    <!-- 音频文件夹管理按钮将插入到这里 -->
+                    <button class="btn btn-secondary" id="downloadBtn" disabled>
+                        <i class="fa-solid fa-download"></i> 下载全部音频
+                    </button>
+                </div>
+            </section>
+
+            <!-- 系统状态 -->
+            <section class="card system-status">
+                <h2><i class="fa-solid fa-info-circle"></i> 系统状态</h2>
+                <div class="status-grid">
+                    <article class="status-item">
+                        <header>TTS服务</header>
+                        <div class="value" id="ttsStatus">正常</div>
+                        <div class="status-indicator" id="ttsIndicator"></div>
+                    </article>
+                    <article class="status-item">
+                        <header>Web服务</header>
+                        <div class="value" id="webStatus">正常</div>
+                        <div class="status-indicator" id="webIndicator"></div>
+                    </article>
+                    <article class="status-item">
+                        <header>处理队列</header>
+                        <div class="value" id="queueCount">0 个任务</div>
+                        <div class="status-indicator" id="queueIndicator"></div>
+                    </article>
+                    <article class="status-item">
+                        <header>错误状态</header>
+                        <div class="value warn" id="errorCount">0 个错误</div>
+                        <button class="link-btn" id="viewErrorsBtn">查看</button>
+                    </article>
+                </div>
+            </section>
+        </main>
+
+        <!-- 文件处理历史和活动日志 -->
+        <div class="bottom-section">
+            <section class="card history">
+                <h2><i class="fa-solid fa-clock"></i> 音频生成历史</h2>
+                <div class="table-container">
+                    <table id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>文件名</th>
+                                <th>脚本数</th>
+                                <th>生成音频文件</th>
+                                <th>状态</th>
+                                <th>时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody">
+                            <tr class="empty-row">
+                                <td colspan="6" class="empty-state">
+                                    <i class="fa-solid fa-file-circle-plus"></i>
+                                    <p>暂无处理记录</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="card activity-log">
+                <h2><i class="fa-solid fa-list"></i> 活动日志</h2>
+                <div class="log-controls">
+                    <button class="btn btn-sm btn-outline" id="clearLogBtn">
+                        <i class="fa-solid fa-trash"></i> 清空日志
+                    </button>
+                    <button class="btn btn-sm btn-outline" id="exportLogBtn">
+                        <i class="fa-solid fa-download"></i> 导出
+                    </button>
+                </div>
+                <ul class="timeline" id="activityLog">
+                    <li class="log-entry">
+                        <span class="time">系统启动</span>
+                        <div class="event success">
+                            <strong>TT-Live-AI 语音生成系统已就绪</strong>
+                            <p>所有服务正常运行，等待文件上传</p>
+                        </div>
+                    </li>
+                </ul>
+            </section>
+        </div>
+
+        <footer class="bottombar">
+            <span id="storageInfo">存储使用: 0%</span>
+            <span id="lastSync">上次同步: 刚刚</span>
+            <span id="versionInfo">版本: v1.0.0</span>
+        </footer>
+    </div>
+
+    <!-- Toast 通知容器 -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- 模态框容器 -->
+    <div id="modalContainer" class="modal-container"></div>
+
+    <script src="{{ url_for('static', filename='js/codex-compact-ui.js') }}"></script>
+</body>
+</html>

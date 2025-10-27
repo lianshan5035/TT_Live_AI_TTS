@@ -14,6 +14,7 @@ import random
 import numpy as np
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_from_directory, send_file
+from flask_cors import CORS
 import logging
 
 # 配置日志
@@ -31,8 +32,47 @@ app = Flask(__name__,
            template_folder='../templates',
            static_folder='../static')
 
+# 启用CORS支持
+CORS(app, origins=['*'])
+
 # TTS服务配置
-TTS_SERVICE_URL = "http://127.0.0.1:5001"
+# 语音模型池（支持多种语音模型）
+VOICE_MODELS = {
+    # 女性语音模型
+    "en-US-AmandaMultilingualNeural": {"gender": "女性", "style": "Clear, Bright, Youthful", "name": "阿曼达", "description": "清晰、明亮、年轻"},
+    "en-US-AriaNeural": {"gender": "女性", "style": "Crisp, Bright, Clear", "name": "阿里亚", "description": "清脆、明亮、清晰"},
+    "en-US-AvaNeural": {"gender": "女性", "style": "Pleasant, Friendly, Caring", "name": "艾娃", "description": "令人愉悦、友好、关怀"},
+    "en-US-EmmaNeural": {"gender": "女性", "style": "Cheerful, Light-Hearted, Casual", "name": "艾玛", "description": "快乐、轻松、随意"},
+    "en-US-JennyNeural": {"gender": "女性", "style": "Sincere, Pleasant, Approachable", "name": "珍妮", "description": "真诚、愉快、易接近"},
+    "en-US-MichelleNeural": {"gender": "女性", "style": "Confident, Authentic, Warm", "name": "米歇尔", "description": "自信、真实、温暖"},
+    "en-US-NancyNeural": {"gender": "女性", "style": "Confident, Serious, Mature", "name": "南希", "description": "自信、严肃、成熟"},
+    "en-US-SerenaNeural": {"gender": "女性", "style": "Formal, Confident, Mature", "name": "塞雷娜", "description": "正式、自信、成熟"},
+    "en-US-AshleyNeural": {"gender": "女性", "style": "Sincere, Approachable, Honest", "name": "阿什莉", "description": "真诚、易接近、诚实"},
+    
+    # 男性语音模型
+    "en-US-BrandonNeural": {"gender": "男性", "style": "Warm, Engaging, Authentic", "name": "布兰登", "description": "温暖、吸引人、真实"},
+    "en-US-KaiNeural": {"gender": "男性", "style": "Sincere, Pleasant, Bright, Clear, Friendly, Warm", "name": "凯", "description": "真诚、愉快、明亮、清晰、友好、温暖"},
+    "en-US-DavisNeural": {"gender": "男性", "style": "Soothing, Calm, Smooth", "name": "戴维斯", "description": "抚慰、平静、顺畅"},
+    
+    # 中性语音模型
+    "en-US-FableNeural": {"gender": "中性", "style": "Casual, Friendly", "name": "传奇", "description": "随意、友好"}
+}
+
+# 情绪与语音模型映射
+EMOTION_VOICE_MAPPING = {
+    "Excited": ["en-US-AriaNeural", "en-US-EmmaNeural", "en-US-MichelleNeural"],
+    "Confident": ["en-US-NancyNeural", "en-US-SerenaNeural", "en-US-BrandonNeural"],
+    "Empathetic": ["en-US-AvaNeural", "en-US-JennyNeural", "en-US-AshleyNeural"],
+    "Calm": ["en-US-DavisNeural", "en-US-AvaNeural", "en-US-JennyNeural"],
+    "Playful": ["en-US-EmmaNeural", "en-US-AriaNeural", "en-US-FableNeural"],
+    "Urgent": ["en-US-MichelleNeural", "en-US-NancyNeural", "en-US-BrandonNeural"],
+    "Authoritative": ["en-US-SerenaNeural", "en-US-NancyNeural", "en-US-BrandonNeural"],
+    "Friendly": ["en-US-JennyNeural", "en-US-AvaNeural", "en-US-KaiNeural"],
+    "Inspirational": ["en-US-MichelleNeural", "en-US-BrandonNeural", "en-US-AriaNeural"],
+    "Serious": ["en-US-SerenaNeural", "en-US-NancyNeural", "en-US-DavisNeural"],
+    "Mysterious": ["en-US-DavisNeural", "en-US-SerenaNeural", "en-US-AvaNeural"],
+    "Grateful": ["en-US-JennyNeural", "en-US-AvaNeural", "en-US-AshleyNeural"]
+}
 
 # 创建必要的目录
 def create_directories():
@@ -43,6 +83,11 @@ def create_directories():
 
 @app.route('/')
 def index():
+    """紧凑型界面主页面"""
+    return render_template('codex-compact-ui.html')
+
+@app.route('/intelligent')
+def intelligent():
     """智能界面主页面"""
     return render_template('intelligent-ui.html')
 
@@ -56,31 +101,114 @@ def classic():
     """经典界面"""
     return render_template('index_经典界面模板.html')
 
+@app.route('/api/voices', methods=['GET'])
+def get_voices():
+    """获取所有可用的语音模型"""
+    try:
+        return jsonify({
+            "success": True,
+            "voices": VOICE_MODELS,
+            "emotion_mapping": EMOTION_VOICE_MAPPING,
+            "total_voices": len(VOICE_MODELS)
+        })
+    except Exception as e:
+        logger.error(f"获取语音模型失败: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/voices/<emotion>', methods=['GET'])
+def get_voices_for_emotion(emotion):
+    """获取指定情绪的推荐语音模型"""
+    try:
+        if emotion in EMOTION_VOICE_MAPPING:
+            voices = EMOTION_VOICE_MAPPING[emotion]
+            voice_details = []
+            for voice in voices:
+                voice_info = VOICE_MODELS.get(voice, {"gender": "未知", "style": "未知", "name": "未知", "description": "未知"})
+                voice_details.append({
+                    "voice": voice,
+                    "info": voice_info
+                })
+            
+            return jsonify({
+                "success": True,
+                "emotion": emotion,
+                "recommended_voices": voice_details,
+                "total_recommended": len(voices)
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": f"不支持的情绪类型: {emotion}",
+                "supported_emotions": list(EMOTION_VOICE_MAPPING.keys())
+            }), 400
+    except Exception as e:
+        logger.error(f"获取情绪语音模型失败: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @app.route('/api/status')
 def get_status():
-    """获取系统状态"""
     try:
         # 检查TTS服务状态
-        response = requests.get(f"{TTS_SERVICE_URL}/status", timeout=5)
-        if response.status_code == 200:
-            tts_status = response.json()
+        tts_status = "unknown"
+        tts_info = {}
+        try:
+            tts_response = requests.get(f"{TTS_SERVICE_URL}/health", timeout=5)
+            if tts_response.status_code == 200:
+                tts_status = "healthy"
+                tts_info = tts_response.json()
+            else:
+                tts_status = "unhealthy"
+        except Exception as e:
+            logger.warning(f"TTS服务检查失败: {str(e)}")
+            tts_status = "unhealthy"
+        
+        return jsonify({
+            "status": "connected",
+            "timestamp": datetime.now().isoformat(),
+            "tts_service": {
+                "status": tts_status,
+                "url": TTS_SERVICE_URL,
+                "supported_emotions": list(A3_EMOTION_CONFIG.keys()),
+                "default_voice": DEFAULT_VOICE,
+                "max_concurrent": MAX_CONCURRENT_TASKS,
+                "output_directory": OUTPUT_DIR,
+                "log_directory": LOG_DIR,
+                "service_info": tts_info
+            }
+        })
+    except Exception as e:
+        logger.error(f"获取状态失败: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }), 500
+
+@app.route('/api/tts-health')
+def tts_health_check():
+    """TTS服务健康检查"""
+    try:
+        tts_response = requests.get(f"{TTS_SERVICE_URL}/health", timeout=5)
+        if tts_response.status_code == 200:
             return jsonify({
-                "status": "connected",
-                "tts_service": tts_status,
+                "status": "healthy",
+                "service": "TTS",
                 "timestamp": datetime.now().isoformat()
             })
         else:
             return jsonify({
-                "status": "disconnected",
-                "error": "TTS服务无响应",
+                "status": "unhealthy",
+                "service": "TTS",
                 "timestamp": datetime.now().isoformat()
-            })
+            }), 503
     except Exception as e:
+        logger.error(f"TTS健康检查失败: {str(e)}")
         return jsonify({
-            "status": "disconnected",
+            "status": "unhealthy",
+            "service": "TTS",
             "error": str(e),
             "timestamp": datetime.now().isoformat()
-        })
+        }), 503
 
 @app.route('/api/a3-config')
 def get_a3_config():
@@ -560,7 +688,6 @@ def parse_excel_file(filepath):
                 'English Messages', 'english_messages', 'Messages', 'messages',
                 'English Posts', 'english_posts', 'Posts', 'posts',
                 'English Ads', 'english_ads', 'Ads', 'ads',
-                'English Content', 'english_content', 'Content', 'content',
                 'English Marketing', 'english_marketing', 'Marketing', 'marketing',
                 'English Sales', 'english_sales', 'Sales', 'sales',
                 'English Copywriting', 'english_copywriting', 'Copywriting', 'copywriting',
@@ -584,6 +711,34 @@ def parse_excel_file(filepath):
                 'English Key Content', 'english_key_content', 'Key Content', 'key_content',
                 'English Essential Content', 'english_essential_content', 'Essential Content', 'essential_content',
                 'English Important Content', 'english_important_content', 'Important Content', 'important_content'
+            ],
+            'emotion': [
+                'emotion', 'Emotion', '情绪', '情绪类型', 'emotion_type', 'Emotion Type',
+                'mood', 'Mood', '语调', '声音情绪', 'voice_emotion', 'Voice Emotion'
+            ],
+            'voice': [
+                'voice', 'Voice', '语音', '声音', 'voice_model', 'Voice Model',
+                'speaker', 'Speaker', '说话人', '声音模型', 'tts_voice', 'TTS Voice'
+            ],
+            'rate': [
+                'rate', 'Rate', '语速', '速度', 'speech_rate', 'Speech Rate',
+                'speed', 'Speed', '语速参数', 'rate_parameter', 'Rate Parameter'
+            ],
+            'pitch': [
+                'pitch', 'Pitch', '音调', '音高', 'voice_pitch', 'Voice Pitch',
+                'tone', 'Tone', '音调参数', 'pitch_parameter', 'Pitch Parameter'
+            ],
+            'volume': [
+                'volume', 'Volume', '音量', '声音大小', 'voice_volume', 'Voice Volume',
+                'loudness', 'Loudness', '音量参数', 'volume_parameter', 'Volume Parameter'
+            ],
+            'style': [
+                'style', 'Style', '风格', '语调风格', 'voice_style', 'Voice Style',
+                'tone_style', 'Tone Style', '风格类型', 'style_type', 'Style Type'
+            ],
+            'products': [
+                'products', 'Products', '产品类型', '适用产品', 'product_type', 'Product Type',
+                'category', 'Category', '类别', '产品类别', 'product_category', 'Product Category'
             ],
             'chinese_translation': [
                 # 标准字段名
@@ -661,28 +816,90 @@ def parse_excel_file(filepath):
             chinese_field = found_fields['chinese_translation']
             chinese_translations = df[chinese_field].dropna().tolist()
         
-        # 根据产品类型自动选择情绪和语音
-        emotion = 'Excited'  # 默认情绪
-        voice = 'en-US-JennyNeural'  # 默认语音
+        # 提取TTS参数（如果存在）
+        emotions = []
+        voices = []
+        rates = []
+        pitches = []
+        volumes = []
         
-        # 根据产品名称关键词调整情绪
-        if any(keyword in product_name.lower() for keyword in ['美白', '淡斑', '亮白', 'brightening', 'whitening']):
-            emotion = 'Excited'
-        elif any(keyword in product_name.lower() for keyword in ['保湿', '滋润', 'moisturizing', 'hydrating']):
-            emotion = 'Calm'
-        elif any(keyword in product_name.lower() for keyword in ['抗老', '紧致', 'anti-aging', 'firming']):
-            emotion = 'Confident'
+        # 检查是否有TTS参数字段
+        has_emotion_field = 'emotion' in found_fields
+        has_voice_field = 'voice' in found_fields
+        has_rate_field = 'rate' in found_fields
+        has_pitch_field = 'pitch' in found_fields
+        has_volume_field = 'volume' in found_fields
+        
+        for i, script in enumerate(scripts):
+            # 提取每行的TTS参数
+            emotion = df.iloc[i][found_fields['emotion']] if has_emotion_field else None
+            voice = df.iloc[i][found_fields['voice']] if has_voice_field else None
+            rate = df.iloc[i][found_fields['rate']] if has_rate_field else None
+            pitch = df.iloc[i][found_fields['pitch']] if has_pitch_field else None
+            volume = df.iloc[i][found_fields['volume']] if has_volume_field else None
+            
+            emotions.append(emotion if pd.notna(emotion) else None)
+            voices.append(voice if pd.notna(voice) else None)
+            rates.append(rate if pd.notna(rate) else None)
+            pitches.append(pitch if pd.notna(pitch) else None)
+            volumes.append(volume if pd.notna(volume) else None)
+        
+        # 根据产品类型自动选择情绪和语音（如果没有从Excel中提取到）
+        default_emotion = 'Excited'  # 默认情绪
+        default_voice = 'en-US-JennyNeural'  # 默认语音
+        
+        # 根据产品名称关键词调整情绪（与GPTs指令保持一致）
+        product_lower = product_name.lower()
+        if any(keyword in product_lower for keyword in ['新品', '促销', '限时', '秒杀', '特价', '优惠', 'new', 'sale', 'promotion']):
+            default_emotion = 'Excited'
+        elif any(keyword in product_lower for keyword in ['高端', '科技', '专业', '顶级', '奢华', '精品', 'premium', 'luxury', 'professional']):
+            default_emotion = 'Confident'
+        elif any(keyword in product_lower for keyword in ['护肤', '健康', '美容', '保养', '修复', '抗衰', 'skincare', 'beauty', 'health']):
+            default_emotion = 'Empathetic'
+        elif any(keyword in product_lower for keyword in ['家居', '教育', '学习', '培训', '课程', '知识', 'home', 'education', 'learning']):
+            default_emotion = 'Calm'
+        elif any(keyword in product_lower for keyword in ['美妆', '时尚', '潮流', '彩妆', '造型', '搭配', 'makeup', 'fashion', 'style']):
+            default_emotion = 'Playful'
+        elif any(keyword in product_lower for keyword in ['限时', '紧急', '最后', '截止', '倒计时', 'urgent', 'limited', 'deadline']):
+            default_emotion = 'Urgent'
+        elif any(keyword in product_lower for keyword in ['投资', '金融', '法律', '咨询', '专业', '权威', 'investment', 'finance', 'legal']):
+            default_emotion = 'Authoritative'
+        elif any(keyword in product_lower for keyword in ['成功', '励志', '激励', '提升', '改变', '突破', 'success', 'motivation', 'inspiration']):
+            default_emotion = 'Inspirational'
+        elif any(keyword in product_lower for keyword in ['公告', '通知', '声明', '正式', '重要', '官方', 'announcement', 'official', 'formal']):
+            default_emotion = 'Serious'
+        elif any(keyword in product_lower for keyword in ['预告', '悬念', '神秘', '秘密', '即将', '敬请', 'preview', 'mystery', 'coming']):
+            default_emotion = 'Mysterious'
+        elif any(keyword in product_lower for keyword in ['感谢', '复购', '回馈', '感恩', '客户', '会员', 'thank', 'grateful', 'customer']):
+            default_emotion = 'Grateful'
+        else:
+            default_emotion = 'Friendly'
+        
+        # 如果没有从Excel中提取到情绪，使用默认情绪
+        if not has_emotion_field or all(e is None for e in emotions):
+            emotions = [default_emotion] * len(scripts)
+        
+        # 如果没有从Excel中提取到语音，使用默认语音
+        if not has_voice_field or all(v is None for v in voices):
+            voices = [default_voice] * len(scripts)
         
         # A3标准验证
         a3_compliance = {
-            'emotion_valid': emotion in A3_EMOTION_CONFIG,
-            'voice_valid': voice.startswith('en-US-'),
+            'emotion_valid': all(e in A3_EMOTION_CONFIG for e in emotions if e),
+            'voice_valid': all(v.startswith('en-US-') for v in voices if v),
             'scripts_count': len(scripts),
             'scripts_length_valid': all(50 <= len(str(script)) <= 1000 for script in scripts),
             'product_name_extracted': bool(product_name),
             'chinese_translation_available': 'chinese_translation' in found_fields,
             'file_format_supported': file_ext in ['.xlsx', '.xls', '.csv', '.tsv'],
-            'fields_mapped': found_fields
+            'fields_mapped': found_fields,
+            'tts_parameters_available': {
+                'emotion': has_emotion_field,
+                'voice': has_voice_field,
+                'rate': has_rate_field,
+                'pitch': has_pitch_field,
+                'volume': has_volume_field
+            }
         }
         
         return {
@@ -690,8 +907,13 @@ def parse_excel_file(filepath):
             'product_name': product_name,
             'scripts': scripts,
             'chinese_translations': chinese_translations,
-            'emotion': emotion,
-            'voice': voice,
+            'emotions': emotions,
+            'voices': voices,
+            'rates': rates,
+            'pitches': pitches,
+            'volumes': volumes,
+            'default_emotion': default_emotion,
+            'default_voice': default_voice,
             'a3_compliance': a3_compliance,
             'total_scripts': len(scripts),
             'filename': filename,
@@ -1009,6 +1231,106 @@ def export_a3_excel():
             "success": False,
             "error": str(e)
         }), 500
+
+@app.route('/api/open-output-folder')
+def open_output_folder():
+    """打开输出文件夹"""
+    try:
+        import subprocess
+        import platform
+        import math
+        
+        # 获取输出文件夹路径
+        output_dir = os.path.join(os.path.dirname(__file__), '..', '08_数据文件_输入输出和日志', 'outputs')
+        
+        # 确保文件夹存在
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # 根据操作系统打开文件夹
+        system = platform.system()
+        if system == "Darwin":  # macOS
+            subprocess.run(["open", output_dir])
+        elif system == "Windows":
+            subprocess.run(["explorer", output_dir])
+        elif system == "Linux":
+            subprocess.run(["xdg-open", output_dir])
+        
+        logger.info(f"打开输出文件夹: {output_dir}")
+        
+        return jsonify({
+            "success": True,
+            "message": f"已打开音频输出文件夹: {output_dir}",
+            "path": output_dir,
+            "folder_name": "音频输出文件夹"
+        })
+        
+    except Exception as e:
+        logger.error(f"打开输出文件夹失败: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        })
+
+@app.route('/api/get-output-files')
+def get_output_files():
+    """获取输出文件列表"""
+    try:
+        import math
+        
+        output_dir = os.path.join(os.path.dirname(__file__), '..', '08_数据文件_输入输出和日志', 'outputs')
+        
+        if not os.path.exists(output_dir):
+            return jsonify({
+                "success": True,
+                "files": [],
+                "message": "输出文件夹不存在"
+            })
+        
+        files = []
+        for root, dirs, filenames in os.walk(output_dir):
+            for filename in filenames:
+                if filename.endswith(('.mp3', '.wav', '.ogg', '.m4a')):
+                    file_path = os.path.join(root, filename)
+                    file_size = os.path.getsize(file_path)
+                    relative_path = os.path.relpath(file_path, output_dir)
+                    
+                    files.append({
+                        "name": filename,
+                        "path": relative_path,
+                        "size": file_size,
+                        "size_formatted": format_file_size(file_size),
+                        "modified": os.path.getmtime(file_path)
+                    })
+        
+        # 按修改时间排序，最新的在前
+        files.sort(key=lambda x: x['modified'], reverse=True)
+        
+        logger.info(f"获取输出文件列表: {len(files)} 个文件")
+        
+        return jsonify({
+            "success": True,
+            "files": files,
+            "total_count": len(files),
+            "output_dir": output_dir
+        })
+        
+    except Exception as e:
+        logger.error(f"获取输出文件列表失败: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        })
+
+def format_file_size(size_bytes):
+    """格式化文件大小"""
+    import math
+    if size_bytes == 0:
+        return "0 Bytes"
+    size_names = ["Bytes", "KB", "MB", "GB"]
+    i = int(math.floor(math.log(size_bytes, 1024)))
+    p = math.pow(1024, i)
+    s = round(size_bytes / p, 2)
+    return f"{s} {size_names[i]}"
 
 @app.route('/static/<path:filename>')
 def static_files(filename):

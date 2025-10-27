@@ -140,12 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('文件上传成功，开始解析...', 'success');
             updateActivityItem(file.name, '解析中', 'warning');
             
-            // 显示解析结果
+            // 显示解析进度条
+            showParseProgress(file.name, uploadResult);
+            
+            // 解析成功后直接开始生成，不显示模态框
             if (uploadResult.success) {
-                showParseResult(uploadResult);
-                
-                // 自动开始生成
-                showToast('开始自动生成语音...', 'info');
+                showToast('解析完成，开始生成语音...', 'info');
                 updateActivityItem(file.name, '生成中', 'warning');
                 
                 await autoGenerateFromFile(uploadResult.filename);
@@ -160,47 +160,80 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // 显示解析结果
-    const showParseResult = (result) => {
-        const modal = createModal('文件解析结果', `
-            <div class="parse-result">
-                <div class="result-item">
-                    <strong>产品名称:</strong> ${result.product_name || '未识别'}
+    // 显示解析进度条
+    const showParseProgress = (filename, result) => {
+        // 创建进度条容器
+        const progressContainer = document.createElement('div');
+        progressContainer.className = 'parse-progress-container';
+        progressContainer.innerHTML = `
+            <div class="parse-progress">
+                <div class="progress-header">
+                    <h3><i class="fa-solid fa-file-excel"></i> ${filename}</h3>
+                    <span class="progress-status">解析中...</span>
                 </div>
-                <div class="result-item">
-                    <strong>文件格式:</strong> ${result.file_format}
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%"></div>
                 </div>
-                <div class="result-item">
-                    <strong>脚本数量:</strong> ${result.scripts ? result.scripts.length : 0} 条
+                <div class="progress-details">
+                    <div class="detail-item">
+                        <strong>产品名称:</strong> <span class="product-name">${result.product_name || '未识别'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>文件格式:</strong> <span class="file-format">${result.file_format}</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>脚本数量:</strong> <span class="script-count">${result.scripts ? result.scripts.length : 0} 条</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>推荐音色:</strong> <span class="voice">${result.voice || '自动选择'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>推荐情绪:</strong> <span class="emotion">${result.emotion || '平衡'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>A3标准:</strong> <span class="a3-compliance">${result.a3_compliance ? '✅ 符合' : '❌ 不符合'}</span>
+                    </div>
                 </div>
-                <div class="result-item">
-                    <strong>推荐音色:</strong> ${result.voice || '自动选择'}
-                </div>
-                <div class="result-item">
-                    <strong>推荐情绪:</strong> ${result.emotion || '平衡'}
-                </div>
-                <div class="result-item">
-                    <strong>A3标准:</strong> ${result.a3_compliance ? '✅ 符合' : '❌ 不符合'}
-                </div>
-                ${result.field_mapping ? `
-                <div class="result-item">
-                    <strong>字段映射:</strong> ${JSON.stringify(result.field_mapping)}
-                </div>
-                ` : ''}
             </div>
-        `);
+        `;
         
-        // 添加自动生成按钮
-        const autoGenerateBtn = document.createElement('button');
-        autoGenerateBtn.className = 'btn btn-primary btn-full';
-        autoGenerateBtn.innerHTML = '<i class="fa-solid fa-play"></i> 自动生成语音';
-        autoGenerateBtn.onclick = () => {
-            modal.remove();
-            autoGenerateFromFile(result.filename);
-        };
+        // 插入到活动区域
+        const activityFeed = document.getElementById('activityFeed');
+        if (activityFeed) {
+            activityFeed.insertBefore(progressContainer, activityFeed.firstChild);
+        }
         
-        modal.querySelector('.modal-content').appendChild(autoGenerateBtn);
-        document.body.appendChild(modal);
+        // 模拟进度条动画
+        const progressFill = progressContainer.querySelector('.progress-fill');
+        const progressStatus = progressContainer.querySelector('.progress-status');
+        
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 100) progress = 100;
+            
+            progressFill.style.width = progress + '%';
+            
+            if (progress < 30) {
+                progressStatus.textContent = '解析中...';
+            } else if (progress < 60) {
+                progressStatus.textContent = '分析字段...';
+            } else if (progress < 90) {
+                progressStatus.textContent = '提取脚本...';
+            } else if (progress < 100) {
+                progressStatus.textContent = '完成解析...';
+            } else {
+                progressStatus.textContent = '解析完成';
+                clearInterval(interval);
+                
+                // 3秒后自动移除进度条
+                setTimeout(() => {
+                    if (progressContainer.parentNode) {
+                        progressContainer.remove();
+                    }
+                }, 3000);
+            }
+        }, 200);
     };
     
     // 自动生成语音
