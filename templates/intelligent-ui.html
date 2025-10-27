@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TT-Live-AI 智能控制中心</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-SnJyOG3Zq8pt5p1+t0NenE2no0RvrRZtGJPD7W82dManIeZDV4SSQdlqzTeWY5Avzkdxl3pNGdisz8Iky3U3UA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/intelligent-ui.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="side-nav" aria-label="主导航">
+            <div class="brand">
+                <i class="fa-solid fa-wave-square"></i>
+                <div class="brand-text">
+                    <span class="brand-title">TT-Live-AI</span>
+                    <span class="brand-subtitle">智能语音中枢</span>
+                </div>
+                <button class="nav-toggle" id="navToggle" aria-label="折叠菜单">
+                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+            </div>
+            <nav class="nav-group">
+                <a class="nav-link active" data-section="overview">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>概览</span>
+                </a>
+                <a class="nav-link" data-section="composer">
+                    <i class="fa-solid fa-microphone-lines"></i>
+                    <span>语音生成</span>
+                </a>
+                <a class="nav-link" data-section="workflow">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>任务流</span>
+                </a>
+                <a class="nav-link" data-section="library">
+                    <i class="fa-solid fa-folder-music"></i>
+                    <span>内容库</span>
+                </a>
+                <a class="nav-link" data-section="insights">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>洞察</span>
+                </a>
+                <a class="nav-link" data-section="settings">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>设置</span>
+                </a>
+            </nav>
+            <div class="nav-footer">
+                <div class="status-chip">
+                    <span class="pulse" aria-hidden="true"></span>
+                    <div>
+                        <strong>服务运行中</strong>
+                        <p class="status-desc">上次同步：<span id="lastSynced">刚刚</span></p>
+                    </div>
+                </div>
+                <button class="btn btn-ghost" id="supportBtn">
+                    <i class="fa-regular fa-life-ring"></i>
+                    <span>支持中心</span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="content-area">
+            <header class="top-bar">
+                <div class="top-left">
+                    <button class="icon-btn" id="drawerToggle" aria-label="展开导航">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="view-switch" role="tablist">
+                        <button class="chip active" data-section="overview" role="tab">概览</button>
+                        <button class="chip" data-section="composer" role="tab">生成器</button>
+                        <button class="chip" data-section="workflow" role="tab">任务流</button>
+                    </div>
+                </div>
+                <div class="top-right">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="search" placeholder="搜索任务、声音或文案…" aria-label="搜索">
+                    </div>
+                    <button class="icon-btn" id="themeToggle" aria-label="切换主题">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <div class="user-pill">
+                        <img src="https://i.pravatar.cc/40?img=8" alt="管理员头像">
+                        <div>
+                            <span class="user-name">管理员</span>
+                            <span class="user-role">实时监控中</span>
+                        </div>
+                        <i class="fa-solid fa-angle-down"></i>
+                    </div>
+                </div>
+            </header>
+
+            <main class="main-sections">
+                <section id="overview" class="section active">
+                    <h2 class="section-title">运行概览</h2>
+                    <div class="overview-grid">
+                        <div class="stat-card">
+                            <div class="stat-meta">
+                                <i class="fa-solid fa-gauge-high"></i>
+                                <span>实时状态</span>
+                            </div>
+                            <h3 id="systemHealth">系统健康 · 正常</h3>
+                            <div class="stat-progress">
+                                <div class="stat-track">
+                                    <div class="stat-value" style="width: 64%;" aria-hidden="true"></div>
+                                </div>
+                                <div class="stat-details">
+                                    <span>CPU 64%</span>
+                                    <span>内存 45%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-meta">
+                                <i class="fa-solid fa-waveform"></i>
+                                <span>生成效率</span>
+                            </div>
+                            <h3><span id="avgLatency">1.8s</span> 平均响应</h3>
+                            <ul class="stat-list">
+                                <li>成功率 <strong id="successRate">98%</strong></li>
+                                <li>当日生成 <strong id="dailyJobs">124</strong> 条</li>
+                            </ul>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-meta">
+                                <i class="fa-solid fa-layer-group"></i>
+                                <span>任务队列</span>
+                            </div>
+                            <h3>待处理 <span id="queueCount">7</span> 项</h3>
+                            <div class="queue-bar">
+                                <span class="queue-label">优先级</span>
+                                <div class="queue-track">
+                                    <span class="queue-fill urgent" style="width: 25%;"></span>
+                                    <span class="queue-fill high" style="width: 45%;"></span>
+                                    <span class="queue-fill normal" style="width: 30%;"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-meta">
+                                <i class="fa-solid fa-headphones"></i>
+                                <span>热门音色</span>
+                            </div>
+                            <h3>推荐音色</h3>
+                            <ul class="voice-tags">
+                                <li><span class="tag">晓晓 · 情感型</span></li>
+                                <li><span class="tag">云扬 · 广播风</span></li>
+                                <li><span class="tag">Jenny · 标准</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="dual-panel">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-timeline"></i> 实时活动</h3>
+                                <div class="panel-actions">
+                                    <button class="icon-btn small" aria-label="暂停"><i class="fa-solid fa-pause"></i></button>
+                                    <button class="icon-btn small" aria-label="导出"><i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+                                </div>
+                            </div>
+                            <ol class="activity-feed" id="activityFeed">
+                                <li>
+                                    <span class="feed-time">09:14</span>
+                                    <div>
+                                        <p>营销推广文案 · Jenny (英语)</p>
+                                        <span class="chip subtle success">已生成</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <span class="feed-time">09:10</span>
+                                    <div>
+                                        <p>客服语音包 · 晓晓 (中文)</p>
+                                        <span class="chip subtle warning">排队中</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <span class="feed-time">09:06</span>
+                                    <div>
+                                        <p>产品Demo · 云扬 (中文)</p>
+                                        <span class="chip subtle danger">检查配置</span>
+                                    </div>
+                                </li>
+                            </ol>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-chart-line"></i> 时段趋势</h3>
+                                <button class="chip subtle" aria-label="切换图表">今日</button>
+                            </div>
+                            <div class="chart-placeholder" aria-hidden="true">
+                                <span>图表加载中…</span>
+                            </div>
+                            <ul class="trend-legend">
+                                <li><span class="dot primary"></span>成功生成</li>
+                                <li><span class="dot neutral"></span>平均时长</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="composer" class="section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">语音生成器</h2>
+                            <p class="section-subtitle">专注完成文案、音色和参数即可一键生成，多轨预览确保输出准确。</p>
+                        </div>
+                        <div class="section-controls">
+                            <button class="btn btn-secondary" id="importScript">
+                                <i class="fa-solid fa-file-import"></i>
+                                导入文案
+                            </button>
+                            <button class="btn btn-primary" id="createJob">
+                                <i class="fa-solid fa-play"></i>
+                                启动生成
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="composer-grid">
+                        <div class="composer-main">
+                            <div class="card-form">
+                                <div class="form-row">
+                                    <label class="field">
+                                        <span>任务名称</span>
+                                        <input type="text" id="taskName" placeholder="例如：新品发布会开场词" autocomplete="off">
+                                    </label>
+                                    <label class="field">
+                                        <span>目标语言</span>
+                                        <div class="select">
+                                            <select id="languageSelect">
+                                                <option value="zh-CN">中文（普通话）</option>
+                                                <option value="zh-TW">中文（台湾）</option>
+                                                <option value="en-US">英语（美式）</option>
+                                                <option value="ja-JP">日语</option>
+                                            </select>
+                                            <i class="fa-solid fa-angle-down"></i>
+                                        </div>
+                                    </label>
+                                </div>
+                                <label class="field">
+                                    <span>文案内容</span>
+                                    <textarea id="scriptInput" rows="8" placeholder="输入或粘贴文案，每行表示一条语音片段…" spellcheck="false"></textarea>
+                                </label>
+                                <div class="form-meta">
+                                    <span>字符：<strong id="charCounter">0</strong></span>
+                                    <span>行数：<strong id="lineCounter">0</strong></span>
+                                    <button class="link-btn" id="splitHelper">智能拆分</button>
+                                </div>
+                            </div>
+
+                            <div class="card-form">
+                                <h3 class="card-title">音色与情绪</h3>
+                                <div class="form-row">
+                                    <label class="field">
+                                        <span>语音模型</span>
+                                        <div class="select">
+                                            <select id="voiceModel">
+                                                <option value="zh-CN-XiaoxiaoNeural">晓晓 · 情感</option>
+                                                <option value="zh-CN-YunyangNeural">云扬 · 男声</option>
+                                                <option value="en-US-JennyNeural">Jenny · 标准</option>
+                                                <option value="en-US-GuyNeural">Guy · 激昂</option>
+                                            </select>
+                                            <i class="fa-solid fa-angle-down"></i>
+                                        </div>
+                                    </label>
+                                    <label class="field">
+                                        <span>情绪设定</span>
+                                        <div class="select">
+                                            <select id="emotionPreset">
+                                                <option value="balanced">平衡</option>
+                                                <option value="inspire">鼓舞</option>
+                                                <option value="friendly">亲和</option>
+                                                <option value="urgent">紧急</option>
+                                            </select>
+                                            <i class="fa-solid fa-angle-down"></i>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="sliders">
+                                    <label class="slider-field">
+                                        <div>
+                                            <span>语速</span>
+                                            <strong id="rateValue">0%</strong>
+                                        </div>
+                                        <input type="range" id="rateSlider" min="-30" max="30" value="0">
+                                    </label>
+                                    <label class="slider-field">
+                                        <div>
+                                            <span>音调</span>
+                                            <strong id="pitchValue">0%</strong>
+                                        </div>
+                                        <input type="range" id="pitchSlider" min="-20" max="20" value="0">
+                                    </label>
+                                    <label class="slider-field">
+                                        <div>
+                                            <span>音量</span>
+                                            <strong id="volumeValue">0dB</strong>
+                                        </div>
+                                        <input type="range" id="volumeSlider" min="-12" max="12" value="0">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <aside class="composer-aside">
+                            <div class="card-form">
+                                <h3 class="card-title">多轨预览</h3>
+                                <ul class="preview-list" id="previewList">
+                                    <li class="preview-item active">
+                                        <button class="icon-btn small"><i class="fa-solid fa-play"></i></button>
+                                        <div>
+                                            <p>片段 01 · 00:12</p>
+                                            <span>晓晓 · 情感</span>
+                                        </div>
+                                        <button class="icon-btn small"><i class="fa-solid fa-sliders"></i></button>
+                                    </li>
+                                    <li class="preview-item">
+                                        <button class="icon-btn small"><i class="fa-solid fa-play"></i></button>
+                                        <div>
+                                            <p>片段 02 · 00:08</p>
+                                            <span>Jenny · 标准</span>
+                                        </div>
+                                        <button class="icon-btn small"><i class="fa-regular fa-pen-to-square"></i></button>
+                                    </li>
+                                </ul>
+                                <div class="preview-actions">
+                                    <button class="btn btn-outline"><i class="fa-solid fa-headphones"></i> 全部预听</button>
+                                    <button class="btn btn-secondary"><i class="fa-solid fa-download"></i> 批量导出</button>
+                                </div>
+                            </div>
+
+                            <div class="card-form">
+                                <h3 class="card-title">模板与策略</h3>
+                                <div class="template-grid">
+                                    <button class="template-card">
+                                        <span class="label">市场推广</span>
+                                        <strong>热度提升</strong>
+                                        <p>高情绪、快语速，适合新品预告。</p>
+                                    </button>
+                                    <button class="template-card">
+                                        <span class="label">AI客服</span>
+                                        <strong>亲和耐心</strong>
+                                        <p>稳定语速，多轮对话模板。</p>
+                                    </button>
+                                    <button class="template-card">
+                                        <span class="label">培训课程</span>
+                                        <strong>讲解清晰</strong>
+                                        <p>适合长篇稿件，自动分段。</p>
+                                    </button>
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
+                </section>
+
+                <section id="workflow" class="section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">任务流管理</h2>
+                            <p class="section-subtitle">监控每一次生成进度，灵活编排批量任务。</p>
+                        </div>
+                        <div class="section-controls">
+                            <button class="chip subtle active" data-filter="all">全部</button>
+                            <button class="chip subtle" data-filter="running">执行中</button>
+                            <button class="chip subtle" data-filter="queued">排队中</button>
+                            <button class="chip subtle" data-filter="failed">异常</button>
+                        </div>
+                    </div>
+                    <div class="workflow-grid">
+                        <div class="timeline">
+                            <article class="timeline-item running">
+                                <div class="timeline-meta">
+                                    <span class="chip subtle success">执行中</span>
+                                    <time>09:14</time>
+                                </div>
+                                <h3>新品发布宣传片段</h3>
+                                <p>晓晓（情感） · 3 段 · 自动字幕</p>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: 62%;"></div>
+                                </div>
+                                <div class="timeline-actions">
+                                    <button class="icon-btn small"><i class="fa-solid fa-circle-pause"></i></button>
+                                    <button class="icon-btn small"><i class="fa-solid fa-arrow-clockwise"></i></button>
+                                </div>
+                            </article>
+                            <article class="timeline-item queued">
+                                <div class="timeline-meta">
+                                    <span class="chip subtle warning">排队</span>
+                                    <time>09:08</time>
+                                </div>
+                                <h3>AI 客服欢迎语</h3>
+                                <p>Jenny（标准） · 1 段 · 语气适中</p>
+                            </article>
+                            <article class="timeline-item failed">
+                                <div class="timeline-meta">
+                                    <span class="chip subtle danger">异常</span>
+                                    <time>08:59</time>
+                                </div>
+                                <h3>直播暖场 BGM 引导词</h3>
+                                <p>云扬（广播风） · 2 段 · 建议检查音频格式</p>
+                                <button class="link-btn">查看日志</button>
+                            </article>
+                        </div>
+                        <div class="board">
+                            <div class="board-column">
+                                <header>
+                                    <span>待办</span>
+                                    <span class="badge">3</span>
+                                </header>
+                                <div class="board-card">
+                                    <h4>教育课程语音批量导出</h4>
+                                    <p>24 段文案 · 预计 15 分钟</p>
+                                    <div class="board-footer">
+                                        <span class="chip subtle neutral">自动拆分</span>
+                                        <button class="icon-btn small"><i class="fa-solid fa-play"></i></button>
+                                    </div>
+                                </div>
+                                <div class="board-card">
+                                    <h4>线下活动广播稿</h4>
+                                    <p>6 段 · 语速稍慢</p>
+                                    <div class="board-footer">
+                                        <span class="chip subtle neutral">人工校对</span>
+                                        <button class="icon-btn small"><i class="fa-solid fa-user-pen"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="board-column">
+                                <header>
+                                    <span>执行中</span>
+                                    <span class="badge">2</span>
+                                </header>
+                                <div class="board-card active">
+                                    <h4>品牌电台栏目更新</h4>
+                                    <p>Jenny · 8 段 · 动态情绪</p>
+                                    <div class="board-footer">
+                                        <span class="chip subtle success">62%</span>
+                                        <button class="icon-btn small"><i class="fa-solid fa-circle-pause"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="board-column">
+                                <header>
+                                    <span>最近完成</span>
+                                    <span class="badge">5</span>
+                                </header>
+                                <div class="board-card">
+                                    <h4>新品语音合成（多语言）</h4>
+                                    <p>中文 + 英文版本</p>
+                                    <div class="board-footer">
+                                        <span class="chip subtle success">成功</span>
+                                        <button class="icon-btn small"><i class="fa-solid fa-download"></i></button>
+                                    </div>
+                                </div>
+                                <div class="board-card">
+                                    <h4>产品FAQ 智能语音</h4>
+                                    <p>AI客服模型</p>
+                                    <div class="board-footer">
+                                        <span class="chip subtle success">成功</span>
+                                        <button class="icon-btn small"><i class="fa-solid fa-share-nodes"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="library" class="section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">内容库</h2>
+                            <p class="section-subtitle">管理生成历史、素材和语音资产，保持团队协同。</p>
+                        </div>
+                        <div class="section-controls">
+                            <button class="btn btn-outline" id="fileUploadBtn"><i class="fa-solid fa-cloud-arrow-up"></i> 上传Excel</button>
+                            <button class="btn btn-secondary"><i class="fa-solid fa-folder-tree"></i> 新建分组</button>
+                        </div>
+                    </div>
+                    <div class="library-grid">
+                        <!-- 文件上传区域 -->
+                        <div class="upload-section">
+                            <div class="upload-area" id="uploadArea">
+                                <div class="upload-content">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <h3>拖拽Excel文件到此处</h3>
+                                    <p>支持 .xlsx, .xls, .csv, .tsv, .txt 格式</p>
+                                    <button class="btn btn-primary" id="fileUploadBtn">
+                                        <i class="fa-solid fa-folder-open"></i> 选择文件
+                                    </button>
+                                </div>
+                            </div>
+                            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.tsv,.txt" style="display: none;">
+                        </div>
+                        
+                        <div class="library-list">
+                            <header>
+                                <span>最近生成</span>
+                                <button class="link-btn">全部记录</button>
+                            </header>
+                            <ul>
+                                <li>
+                                    <div>
+                                        <strong>新品预热语音</strong>
+                                        <span>Jenny · 45 秒 · MP3</span>
+                                    </div>
+                                    <div class="list-actions">
+                                        <button class="icon-btn small"><i class="fa-solid fa-headphones-simple"></i></button>
+                                        <button class="icon-btn small"><i class="fa-solid fa-download"></i></button>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div>
+                                        <strong>门店欢迎语</strong>
+                                        <span>晓晓 · 12 秒 · WAV</span>
+                                    </div>
+                                    <div class="list-actions">
+                                        <button class="icon-btn small"><i class="fa-solid fa-headphones-simple"></i></button>
+                                        <button class="icon-btn small"><i class="fa-solid fa-share-from-square"></i></button>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div>
+                                        <strong>AI客服提示音</strong>
+                                        <span>云扬 · 9 秒 · OGG</span>
+                                    </div>
+                                    <div class="list-actions">
+                                        <button class="icon-btn small"><i class="fa-solid fa-headphones-simple"></i></button>
+                                        <button class="icon-btn small"><i class="fa-solid fa-rotate-right"></i></button>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="library-panel">
+                            <div class="panel-card">
+                                <h3><i class="fa-solid fa-person-chalkboard"></i> 团队协同</h3>
+                                <p>与团队成员共享语音模板、协同修改文案和参数预设。</p>
+                                <button class="btn btn-primary btn-full">邀请成员</button>
+                            </div>
+                            <div class="panel-card">
+                                <h3><i class="fa-solid fa-wand-magic-sparkles"></i> 智能推荐</h3>
+                                <ul class="recommend-list">
+                                    <li>相似项目的最佳音色组合</li>
+                                    <li>自动拆分策略建议</li>
+                                    <li>批量导出命名规范</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="insights" class="section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">数据洞察</h2>
+                            <p class="section-subtitle">洞察生成趋势与质量，快速发现效率提升空间。</p>
+                        </div>
+                        <div class="section-controls">
+                            <button class="chip subtle active">本周</button>
+                            <button class="chip subtle">本月</button>
+                            <button class="chip subtle">季度</button>
+                        </div>
+                    </div>
+                    <div class="insight-grid">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-clock-rotate-left"></i> 时长分布</h3>
+                            </div>
+                            <div class="chart-placeholder">
+                                <span>柱状图区域</span>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-ranking-star"></i> 模型表现</h3>
+                            </div>
+                            <ul class="ranking-list">
+                                <li><span>晓晓 · 情感</span><strong>满意度 4.8</strong></li>
+                                <li><span>Jenny · 标准</span><strong>满意度 4.6</strong></li>
+                                <li><span>云扬 · 广播风</span><strong>满意度 4.5</strong></li>
+                            </ul>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-bolt"></i> 自动优化建议</h3>
+                            </div>
+                            <ul class="insight-list">
+                                <li>长文本任务建议开启「自动拆分」节省 20% 时间。</li>
+                                <li>英语模型 Jenny 在客服场景满意度更高，可设置为默认。</li>
+                                <li>夜间批处理作业可提前排程，提高并发利用率。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="settings" class="section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">系统设置</h2>
+                            <p class="section-subtitle">集中管理系统参数、默认音色与安全策略。</p>
+                        </div>
+                        <div class="section-controls">
+                            <button class="btn btn-secondary"><i class="fa-solid fa-rotate"></i> 恢复默认</button>
+                            <button class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> 保存配置</button>
+                        </div>
+                    </div>
+                    <div class="settings-grid">
+                        <form class="settings-form">
+                            <h3>运行参数</h3>
+                            <label class="field">
+                                <span>服务端口</span>
+                                <input type="number" value="8050" min="1024" max="65535">
+                            </label>
+                            <label class="field">
+                                <span>最大并发</span>
+                                <input type="number" value="8" min="1" max="32">
+                            </label>
+                            <label class="field">
+                                <span>默认语音模型</span>
+                                <div class="select">
+                                    <select>
+                                        <option value="zh-CN-XiaoxiaoNeural">晓晓 · 情感</option>
+                                        <option value="en-US-JennyNeural">Jenny · 标准</option>
+                                    </select>
+                                    <i class="fa-solid fa-angle-down"></i>
+                                </div>
+                            </label>
+                            <label class="switch-field">
+                                <span>启用自动保存</span>
+                                <input type="checkbox" checked>
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-field">
+                                <span>实时日志推送</span>
+                                <input type="checkbox" checked>
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-field">
+                                <span>外部 API 访问</span>
+                                <input type="checkbox">
+                                <span class="switch"></span>
+                            </label>
+                        </form>
+                        <div class="settings-side">
+                            <div class="panel-card">
+                                <h3><i class="fa-solid fa-shield-halved"></i> 安全策略</h3>
+                                <p>基于角色的访问控制、多因子登录和操作审计确保系统安全。</p>
+                                <button class="link-btn">查看访问日志</button>
+                            </div>
+                            <div class="panel-card">
+                                <h3><i class="fa-solid fa-bug-slash"></i> 自检工具</h3>
+                                <p>自动检测模型可用性、存储容量及网络连通性。</p>
+                                <button class="btn btn-outline btn-full"><i class="fa-solid fa-stethoscope"></i> 一键体检</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div class="floating-panel" id="floatingPanel">
+        <button class="floating-trigger" aria-label="快捷操作">
+            <i class="fa-solid fa-bolt"></i>
+        </button>
+        <div class="floating-content">
+            <h3>快速创建</h3>
+            <button class="btn btn-primary btn-full"><i class="fa-solid fa-wand-magic-sparkles"></i> 智能文案</button>
+            <button class="btn btn-secondary btn-full"><i class="fa-solid fa-language"></i> 多语言克隆</button>
+            <button class="btn btn-outline btn-full"><i class="fa-solid fa-clock-rotate-left"></i> 上次任务</button>
+        </div>
+    </div>
+
+    <div class="toast-stack" id="toastStack" role="status" aria-live="polite"></div>
+
+    <script src="{{ url_for('static', filename='js/intelligent-ui.js') }}"></script>
+</body>
+</html>
