@@ -28,6 +28,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# 服务配置
+TTS_SERVICE_URL = "http://127.0.0.1:5001"  # TTS服务地址
+
 app = Flask(__name__, 
            template_folder='../templates',
            static_folder='../static')
@@ -1103,15 +1106,31 @@ def generate_from_file():
         # 自动生成语音
         product_name = parsed_data["product_name"]
         scripts = parsed_data["scripts"]
-        emotion = parsed_data["emotion"]
-        voice = parsed_data["voice"]
+        emotion = parsed_data.get("default_emotion", "Friendly")  # 使用默认情绪
+        voice = parsed_data.get("default_voice", "en-US-JennyNeural")  # 使用默认语音
         
         logger.info(f"开始从文件生成语音: {product_name}, 脚本数量: {len(scripts)}, 情绪: {emotion}, 语音: {voice}")
         
         # 调用TTS服务生成语音
+        # 格式化脚本为TTS服务期望的格式
+        formatted_scripts = []
+        emotions = parsed_data.get("emotions", [])
+        voices = parsed_data.get("voices", [])
+        
+        for i, script in enumerate(scripts):
+            script_emotion = emotions[i] if i < len(emotions) and emotions[i] else emotion
+            script_voice = voices[i] if i < len(voices) and voices[i] else voice
+            
+            formatted_script = {
+                "english_script": script,
+                "emotion": script_emotion,
+                "voice": script_voice
+            }
+            formatted_scripts.append(formatted_script)
+        
         tts_data = {
             "product_name": product_name,
-            "scripts": scripts,
+            "scripts": formatted_scripts,
             "emotion": emotion,
             "voice": voice,
             "discount": "Special offer available!"

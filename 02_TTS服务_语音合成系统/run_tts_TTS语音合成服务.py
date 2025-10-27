@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+# 系统配置
+MAX_CONCURRENT = 5  # 最大并发处理数
+
 # 语音参数映射表（TT-Live-AI 标准）
 EMOTION_PARAMS = {
     "Excited": {"rate": "+15%", "pitch": "+12Hz", "volume": "+15%"},
