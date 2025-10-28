@@ -1,0 +1,60 @@
+前置滤镜配置指南
+==================================================
+
+当前配置:
+白噪音音量: 70%
+前置滤镜: 无前置滤镜
+输出状态: 禁用
+
+前置滤镜选项:
+- none: 无前置滤镜
+  描述: 不添加任何前置滤镜
+  适用场景: 保持原始音频
+
+- basic_enhancement: 基础增强
+  描述: 基础音频增强滤镜
+  适用场景: 轻微提升音频质量
+  滤镜链: volume=1.1 -> aresample=44100
+
+- voice_enhancement: 语音增强
+  描述: 专门针对语音的增强滤镜
+  适用场景: 优化语音清晰度
+  滤镜链: highpass=f=80 -> lowpass=f=8000 -> volume=1.05
+
+- noise_reduction: 降噪处理
+  描述: 减少背景噪音的滤镜
+  适用场景: 减少背景噪音
+  滤镜链: highpass=f=100 -> lowpass=f=7000 -> volume=1.08
+
+- dynamic_range: 动态范围压缩
+  描述: 压缩动态范围，使音量更均匀
+  适用场景: 平衡音量动态
+  滤镜链: acompressor=threshold=0.089:ratio=9:attack=200:release=1000 -> volume=1.02
+
+- warm_sound: 温暖音色
+  描述: 增加音频的温暖感
+  适用场景: 增加音频温暖感
+  滤镜链: highpass=f=60 -> lowpass=f=12000 -> volume=1.03
+
+- crisp_clear: 清脆清晰
+  描述: 增强音频的清晰度和清脆感
+  适用场景: 增强清晰度
+  滤镜链: highpass=f=120 -> lowpass=f=6000 -> volume=1.06
+
+- broadcast_quality: 广播级质量
+  描述: 达到广播级音频质量的滤镜
+  适用场景: 专业广播级质量
+  滤镜链: highpass=f=80 -> lowpass=f=8000 -> acompressor=threshold=0.089:ratio=9:attack=200:release=1000 -> volume=1.04
+
+使用说明:
+1. 选择合适的前置滤镜
+2. 调整白噪音音量
+3. 预览滤镜链效果
+4. 启用输出生成测试文件
+5. 确认效果后应用到批量处理
+
+配置方法:
+- 使用 set_pre_filter() 设置前置滤镜
+- 使用 set_white_noise_volume() 设置白噪音音量
+- 使用 set_output_enabled() 启用/禁用输出
+- 使用 preview_filter_chain() 预览效果

@@ -30,6 +30,10 @@ logger = logging.getLogger(__name__)
 
 # 服务配置
 TTS_SERVICE_URL = "http://127.0.0.1:5001"  # TTS服务地址
+DEFAULT_VOICE = "en-US-JennyNeural"  # 默认语音模型
+MAX_CONCURRENT_TASKS = 5  # 最大并发处理数
+OUTPUT_DIR = "outputs/"  # 输出目录
+LOG_DIR = "logs/"  # 日志目录
 
 app = Flask(__name__, 
            template_folder='../templates',
@@ -222,6 +226,35 @@ def get_voice_recommendations():
             
     except Exception as e:
         logger.error(f"获取语音推荐失败: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/product-voice', methods=['GET'])
+def get_product_voice():
+    """获取产品级别的固定语音选择"""
+    try:
+        product_name = request.args.get('product_name')
+        emotion = request.args.get('emotion', 'Friendly')
+        
+        if not product_name:
+            return jsonify({"success": False, "error": "缺少产品名称"}), 400
+        
+        # 调用TTS服务获取产品语音
+        response = requests.get(
+            f"{TTS_SERVICE_URL}/product-voice",
+            params={"product_name": product_name, "emotion": emotion},
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            return jsonify(response.json())
+        else:
+            return jsonify({
+                "success": False,
+                "error": f"TTS服务错误: {response.status_code}"
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"获取产品语音失败: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/status')

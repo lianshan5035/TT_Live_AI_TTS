@@ -1,0 +1,263 @@
+openapi: 3.0.1
+info:
+  title: EdgeTTS API
+  version: "1.0"
+  description: "基于 EdgeTTS 的语音合成 API，支持 GPTs 插件调用"
+servers:
+  - url: https://ai.maraecowell.com
+paths:
+  /generate:
+    post:
+      operationId: generateAudio
+      summary: 生成单个语音文件
+      description: 将文本转换为语音文件
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TTSRequest"
+      responses:
+        "200":
+          description: 返回音频文件
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+        "500":
+          description: 生成失败
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+  /batch:
+    post:
+      operationId: generateBatchAudio
+      summary: 批量生成语音文件
+      description: 批量将多个文本转换为语音文件
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchTTSRequest"
+      responses:
+        "200":
+          description: 返回批量处理结果
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchResponse"
+        "500":
+          description: 批量生成失败
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+  /health:
+    get:
+      operationId: healthCheck
+      summary: 健康检查
+      description: 检查 API 服务状态
+      responses:
+        "200":
+          description: 服务正常
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /voices:
+    get:
+      operationId: getVoices
+      summary: 获取支持的语音列表
+      description: 返回所有支持的语音模型和情绪
+      responses:
+        "200":
+          description: 语音列表
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoicesResponse"
+  /upload:
+    post:
+      operationId: uploadFile
+      summary: 上传文件
+      description: 上传 Excel 或 CSV 文件并解析内容
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Excel 或 CSV 文件
+      responses:
+        "200":
+          description: 文件上传成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResponse"
+        "400":
+          description: 文件格式不支持
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+components:
+  schemas:
+    TTSRequest:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          description: "要合成的文本"
+          example: "Hello, this is a test message."
+        voice:
+          type: string
+          default: "en-US-JennyNeural"
+          description: "语音模型"
+          example: "en-US-JennyNeural"
+        emotion:
+          type: string
+          default: "Friendly"
+          description: "情绪类型"
+          enum: ["Calm", "Friendly", "Confident", "Playful", "Excited", "Urgent"]
+          example: "Friendly"
+        format:
+          type: string
+          default: "mp3"
+          description: "音频格式"
+          enum: ["mp3", "wav", "ogg"]
+          example: "mp3"
+    BatchTTSRequest:
+      type: object
+      required: [texts]
+      properties:
+        texts:
+          type: array
+          items:
+            type: string
+          description: "要合成的文本列表"
+          example: ["Hello world", "This is a test", "Another message"]
+        voice:
+          type: string
+          default: "en-US-JennyNeural"
+          description: "语音模型"
+          example: "en-US-JennyNeural"
+        emotion:
+          type: string
+          default: "Friendly"
+          description: "情绪类型"
+          enum: ["Calm", "Friendly", "Confident", "Playful", "Excited", "Urgent"]
+          example: "Friendly"
+        format:
+          type: string
+          default: "mp3"
+          description: "音频格式"
+          enum: ["mp3", "wav", "ogg"]
+          example: "mp3"
+    BatchResponse:
+      type: object
+      properties:
+        batch_id:
+          type: string
+          description: "批次 ID"
+        total_texts:
+          type: integer
+          description: "总文本数量"
+        successful:
+          type: integer
+          description: "成功生成数量"
+        failed:
+          type: integer
+          description: "失败数量"
+        batch_directory:
+          type: string
+          description: "批次文件目录"
+        excel_report:
+          type: string
+          description: "Excel 报告文件路径"
+        results:
+          type: array
+          items:
+            type: object
+          description: "处理结果列表"
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "healthy"
+        service:
+          type: string
+          example: "EdgeTTS API"
+        version:
+          type: string
+          example: "1.0.0"
+        timestamp:
+          type: string
+          format: date-time
+        supported_emotions:
+          type: array
+          items:
+            type: string
+          example: ["Calm", "Friendly", "Confident", "Playful", "Excited", "Urgent"]
+        default_voice:
+          type: string
+          example: "en-US-JennyNeural"
+    VoicesResponse:
+      type: object
+      properties:
+        voices:
+          type: array
+          items:
+            type: string
+          example: ["en-US-JennyNeural", "en-US-GuyNeural", "zh-CN-XiaoxiaoNeural"]
+        emotions:
+          type: array
+          items:
+            type: string
+          example: ["Calm", "Friendly", "Confident", "Playful", "Excited", "Urgent"]
+        formats:
+          type: array
+          items:
+            type: string
+          example: ["mp3", "wav", "ogg"]
+    UploadResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        file_id:
+          type: string
+          description: "文件 ID"
+        file_path:
+          type: string
+          description: "文件路径"
+        texts:
+          type: array
+          items:
+            type: string
+          description: "解析出的文本列表"
+        total_texts:
+          type: integer
+          description: "文本总数"
+        text_column:
+          type: string
+          description: "使用的文本列名"
