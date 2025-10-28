@@ -12,6 +12,7 @@ import time
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+import datetime
 
 class FFmpegAudioProcessor:
     def __init__(self):
@@ -41,8 +42,11 @@ class FFmpegAudioProcessor:
         # 统计信息
         self.processed_count = 0
         self.error_count = 0
+        self.total_files = 0
+        self.start_time = None
+        self.processed_files_info = []
         
-        print("🎵 FFmpeg 音频白噪音混合处理器 (M4A格式)")
+        print("🎵 FFmpeg 音频白噪音混合处理器 (M4A格式输出)")
         print("=" * 60)
         print("🔧 处理规则:")
         print("   ✅ 规则1: 识别 20_输出文件_处理完成的音频文件 中的所有音频")
@@ -50,7 +54,7 @@ class FFmpegAudioProcessor:
         print("   ✅ 规则3: 使用随机偏移截取白噪音")
         print("   ✅ 规则4: 保持与源文件夹相同的目录结构")
         print("   ✅ 规则5: 输出到 20.2_ffpmeg输出文件_M4A格式音频文件")
-        print("   ✅ 规则6: 输出格式为 M4A (aac, 128k)")
+        print("   ✅ 规则6: 输出格式为 M4A (AAC, 128k)")
         print(f"   ✅ 规则7: 白噪音文件: {self.white_noise_file}")
         print("=" * 60)
     
@@ -135,9 +139,19 @@ class FFmpegAudioProcessor:
             if result.returncode == 0:
                 # 检查输出文件
                 if os.path.exists(output_file) and os.path.getsize(output_file) > 1000:
+                    file_size = os.path.getsize(output_file)
+                    file_info = {
+                        'filename': os.path.basename(output_file),
+                        'size': file_size,
+                        'offset': offset,
+                        'duration': audio_duration,
+                        'format': os.path.splitext(output_file)[1]
+                    }
+                    
                     with self.lock:
                         self.processed_count += 1
-                        print(f"✅ 处理成功: {os.path.basename(output_file)} (偏移: {offset:.2f}s)")
+                        self.processed_files_info.append(file_info)
+                        self.print_progress()
                     return True
                 else:
                     with self.lock:
@@ -162,9 +176,172 @@ class FFmpegAudioProcessor:
                 print(f"❌ 处理异常: {os.path.basename(input_file)} - {e}")
             return False
     
+    def print_progress(self):
+        """打印可视化更新看板"""
+        if self.total_files == 0:
+            return
+            
+        current_time = time.time()
+        elapsed_time = current_time - self.start_time if self.start_time else 0
+        
+        # 计算进度百分比
+        progress_percent = (self.processed_count + self.error_count) / self.total_files * 100
+        
+        # 计算剩余时间
+        if self.processed_count > 0 and elapsed_time > 0:
+            avg_time_per_file = elapsed_time / (self.processed_count + self.error_count)
+            remaining_files = self.total_files - (self.processed_count + self.error_count)
+            estimated_remaining_time = remaining_files * avg_time_per_file
+            remaining_time_str = str(datetime.timedelta(seconds=int(estimated_remaining_time)))
+        else:
+            remaining_time_str = "计算中..."
+        
+        # 计算文件大小统计
+        total_size = sum(info['size'] for info in self.processed_files_info)
+        avg_size = total_size / len(self.processed_files_info) if self.processed_files_info else 0
+        
+        # 格式统计
+        format_stats = {}
+        for info in self.processed_files_info:
+            fmt = info['format']
+            format_stats[fmt] = format_stats.get(fmt, 0) + 1
+        
+        # 创建进度条
+        bar_length = 50
+        filled_length = int(bar_length * progress_percent / 100)
+        bar = '█' * filled_length + '░' * (bar_length - filled_length)
+        
+        # 清屏并显示看板
+        os.system('clear' if os.name == 'posix' else 'cls')
+        
+        print("🎵 FFmpeg 音频白噪音混合处理器 - 实时处理看板")
+        print("=" * 80)
+        
+        # 进度条
+        print(f"📊 处理进度: [{bar}] {progress_percent:.1f}%")
+        print(f"   📁 文件: {self.processed_count + self.error_count}/{self.total_files}")
+        print(f"   ✅ 成功: {self.processed_count} | ❌ 失败: {self.error_count}")
+        print()
+        
+        # 时间信息
+        elapsed_str = str(datetime.timedelta(seconds=int(elapsed_time)))
+        print(f"⏱️ 时间统计:")
+        print(f"   🕐 已用时间: {elapsed_str}")
+        print(f"   ⏳ 剩余时间: {remaining_time_str}")
+        if self.processed_count > 0 and elapsed_time > 0:
+            avg_time = elapsed_time / (self.processed_count + self.error_count)
+            print(f"   📈 平均处理时间: {avg_time:.2f}秒/文件")
+        print()
+        
+        # 文件统计
+        print(f"📁 文件统计:")
+        print(f"   💾 总大小: {total_size/1024/1024:.2f} MB")
+        print(f"   📊 平均大小: {avg_size/1024:.2f} KB")
+        if self.processed_files_info:
+            latest_file = self.processed_files_info[-1]
+            print(f"   🔄 最新处理: {latest_file['filename']}")
+        print()
+        
+        # 格式分布
+        if format_stats:
+            print(f"📋 格式分布:")
+            for fmt, count in sorted(format_stats.items()):
+                percentage = count / len(self.processed_files_info) * 100
+                print(f"   {fmt}: {count} 个 ({percentage:.1f}%)")
+            print()
+        
+        # 处理速度
+        if elapsed_time > 0:
+            files_per_second = (self.processed_count + self.error_count) / elapsed_time
+            print(f"🚀 处理速度: {files_per_second:.2f} 文件/秒")
+        
+        print("=" * 80)
+        print("💡 提示: 按 Ctrl+C 可安全停止处理")
+    
+    def print_final_statistics(self):
+        """打印最终统计信息"""
+        if not self.processed_files_info:
+            return
+            
+        print(f"\n\n🎉 处理完成！最终统计报告")
+        print("=" * 80)
+        
+        # 基本统计
+        total_size = sum(info['size'] for info in self.processed_files_info)
+        avg_size = total_size / len(self.processed_files_info)
+        avg_duration = sum(info['duration'] for info in self.processed_files_info) / len(self.processed_files_info)
+        
+        print(f"📊 基本统计:")
+        print(f"   ✅ 成功处理: {self.processed_count} 个文件")
+        print(f"   ❌ 处理失败: {self.error_count} 个文件")
+        print(f"   📁 总文件大小: {total_size/1024/1024:.2f} MB")
+        print(f"   📈 平均文件大小: {avg_size/1024:.2f} KB")
+        print(f"   ⏱️ 平均音频时长: {avg_duration:.2f} 秒")
+        
+        # 格式统计
+        format_stats = {}
+        for info in self.processed_files_info:
+            fmt = info['format']
+            format_stats[fmt] = format_stats.get(fmt, 0) + 1
+        
+        print(f"\n📋 格式统计:")
+        for fmt, count in sorted(format_stats.items()):
+            percentage = count / len(self.processed_files_info) * 100
+            print(f"   {fmt}: {count} 个文件 ({percentage:.1f}%)")
+        
+        # 大小分布统计
+        size_ranges = {
+            "小于1MB": 0,
+            "1-5MB": 0,
+            "5-10MB": 0,
+            "大于10MB": 0
+        }
+        
+        for info in self.processed_files_info:
+            size_mb = info['size'] / 1024 / 1024
+            if size_mb < 1:
+                size_ranges["小于1MB"] += 1
+            elif size_mb < 5:
+                size_ranges["1-5MB"] += 1
+            elif size_mb < 10:
+                size_ranges["5-10MB"] += 1
+            else:
+                size_ranges["大于10MB"] += 1
+        
+        print(f"\n📏 文件大小分布:")
+        for range_name, count in size_ranges.items():
+            percentage = count / len(self.processed_files_info) * 100
+            print(f"   {range_name}: {count} 个文件 ({percentage:.1f}%)")
+        
+        # 时长统计
+        durations = [info['duration'] for info in self.processed_files_info]
+        durations.sort()
+        if durations:
+            min_duration = durations[0]
+            max_duration = durations[-1]
+            median_duration = durations[len(durations)//2]
+            
+            print(f"\n⏱️ 音频时长统计:")
+            print(f"   最短时长: {min_duration:.2f} 秒")
+            print(f"   最长时长: {max_duration:.2f} 秒")
+            print(f"   平均时长: {avg_duration:.2f} 秒")
+            print(f"   中位时长: {median_duration:.2f} 秒")
+        
+        # 偏移统计
+        offsets = [info['offset'] for info in self.processed_files_info]
+        if offsets:
+            avg_offset = sum(offsets) / len(offsets)
+            max_offset = max(offsets)
+            print(f"\n🎲 白噪音偏移统计:")
+            print(f"   平均偏移: {avg_offset:.2f} 秒")
+            print(f"   最大偏移: {max_offset:.2f} 秒")
+        
+        print("=" * 80)
+    
     def scan_audio_files(self):
-        """扫描输入目录中的所有音频文件"""
+        """扫描输入目录中的所有音频文件，跳过已处理的文件"""
         audio_files = []
+        skipped_count = 0
         
         if not os.path.exists(self.input_dir):
             print(f"❌ 输入目录不存在: {self.input_dir}")
@@ -185,7 +362,15 @@ class FFmpegAudioProcessor:
                     rel_path = os.path.splitext(rel_path)[0] + '.m4a'
                     output_file = os.path.join(self.output_dir, rel_path)
                     
+                    # 检查输出文件是否已存在
+                    if os.path.exists(output_file) and os.path.getsize(output_file) > 1000:
+                        skipped_count += 1
+                        continue
+                    
                     audio_files.append((input_file, output_file))
+        
+        if skipped_count > 0:
+            print(f"⏭️ 跳过已处理文件: {skipped_count} 个")
         
         return audio_files
     
@@ -244,7 +429,7 @@ class FFmpegAudioProcessor:
         print(f"🧪 测试文件: {os.path.basename(test_file)}")
         
         # 创建测试输出文件
-        test_output = os.path.join(self.output_dir, "test_output.wav")
+        test_output = os.path.join(self.output_dir, "test_output.m4a")
         
         result = self.process_single_audio(test_file, test_output)
         
