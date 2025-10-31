@@ -1,0 +1,79 @@
+# 排除文件模式 - 安装时忽略的文件和目录
+
+# EdgeTTS 生成的音频文件
+*.mp3
+*.wav
+*.m4a
+*.aac
+*.ogg
+*.flac
+
+# FFmpeg 处理的音频文件
+*_processed.*
+*_mixed.*
+*_converted.*
+
+# 输出目录中的音频文件
+outputs/**/*.mp3
+outputs/**/*.wav
+outputs/**/*.m4a
+outputs/**/*.aac
+outputs/**/*.ogg
+outputs/**/*.flac
+
+# 临时文件和缓存
+temp/
+tmp/
+cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 日志文件（保留目录结构）
+logs/*.log
+logs/*.pid
+logs/*.pkl
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# 虚拟环境（安装时会重新创建）
+venv/
+env/
+.venv/
+.env/
+
+# IDE 文件
+.vscode/
+.idea/
+*.sublime-*
+
+# Git 文件
+.git/
+.gitignore
+
+# 安装程序自身
+installer/
+*.tar.gz
+*.zip
